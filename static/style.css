@@ -1795,6 +1795,6 @@ button:focus, a:focus, input:focus, textarea:focus {
     bottom: 10px;
     font-size: 8px;
     font-weight: bold;
-    color: #888;
+    color: #c0c0c0;
     letter-spacing: 2px;
 }
