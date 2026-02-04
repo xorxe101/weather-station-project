@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Weather Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+  <link rel="icon" href="{{ url_for('static', filename='img_icon/dashboard.ico') }}">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=13">
+  <style>
+    .weather-value.no-data { color: #999; font-style: italic; }
+    .user-controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      background: #e6f7ff;
+      padding: 10px;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div id="sentinel"></div>
+  <div class="dashboard-header">
+    <h1>Weather Dashboard<br>of Vyronas</h1>
+    
+    <div class="user-controls">
+        {% if current_user.is_authenticated %}
+            <a href="/profile" title="Go to Profile & Settings">
+                <img src="{{ url_for('static', filename='img_icon/user.png') }}" 
+                     alt="Profile"
+                     style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid #0066cc; object-fit: cover; cursor: pointer; transition: transform 0.2s;">
+            </a>
+            
+            <span>Welcome <strong>{{ current_user.username }}</strong></span>
+            <button class="control-btn" onclick="saveCurrentMoment()" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <img src="{{ url_for('static', filename='img_icon/save.png') }}" 
+                    alt="Save" 
+                    style="width: 20px; height: 20px;">
+                Save Moment
+            </button>
+            <a href="/my_moments" class="control-btn">My Moments</a>
+
+        {% else %}
+            <span>Welcome <strong>Guest</strong></span>
+            
+            <button class="control-btn" onclick="saveCurrentMoment()" 
+                    title="🔒 Requires Account"
+                    style="display: flex; align-items: center; justify-content: center; gap: 8px; 
+                           opacity: 0.6; cursor: not-allowed; filter: grayscale(100%);">
+                <img src="{{ url_for('static', filename='img_icon/save.png') }}" 
+                     alt="Save" 
+                     style="width: 20px; height: 20px;">
+                Save Moment
+            </button>
+
+            <a href="/login" class="control-btn">Login</a>
+            <a href="/signup" class="control-btn">Sign Up</a>
+        {% endif %}
+    </div>
+    <div class="status-info">
+      <div>Auto-refresh: <span id="refreshStatus">Enabled</span></div>
+      <div>Last update: <span id="lastUpdate">-</span></div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="control-btn" onclick="loadData()">Refresh Now</button>
+    <button class="control-btn" onclick="toggleAutoRefresh()">Toggle Auto-refresh</button>
+    <button class="control-btn" onclick="changeTimeRange(1)">Last Hour</button>
+    <button class="control-btn" onclick="changeTimeRange(6)">Last 6 Hours</button>
+    <button class="control-btn" onclick="changeTimeRange(12)">Last 12 Hours</button>
+    <button class="control-btn" onclick="changeTimeRange(24)">Last 24 Hours</button>
+  </div>
+
+  <div id="latest" class="chart-card"></div>
+  
+  <div class="chart-grid">
+    <div class="chart-card"><div class="chart-container" id="tempChart"></div></div>
+    <div class="chart-card"><div class="chart-container" id="humidityChart"></div></div>
+    <div class="chart-card"><div class="chart-container" id="pressureChart"></div></div>
+    <div class="chart-card"><div class="chart-container" id="windspeedChart"></div></div>
+    <div class="chart-card"><div class="chart-container" id="winddirectionChart"></div></div>
+    <div class="chart-card"><div class="chart-container" id="rainfallrateChart"></div></div>
+    <div class="chart-card"><div class="chart-container" id="dewpointChart"></div></div>
+  </div>
+
+  <div class="last-update">
+      Auto-refresh: <span id="refreshStatus">Enabled</span><br>
+      Last update: <span id="lastUpdate">...</span>
+  </div>
+  <button id="floating-theme-btn" class="action-btn" onclick="toggleTheme()" title="Toggle Theme">
+    <img src="{{ url_for('static', filename='img_icon/moon.png') }}" 
+        class="theme-icon" 
+        style="margin: 0; width: 24px; height: 24px;">
+  </button>
+  <script>
+      // --- STICKY HEADER DETECTION ---
+      // Παρακολουθεί τον "sentinel". Όταν αυτός βγει από την οθόνη, σημαίνει ότι το Header κόλλησε πάνω.
+      const sentinel = document.getElementById('sentinel');
+      const header = document.querySelector('.dashboard-header');
+
+      const observer = new IntersectionObserver((entries) => {
+          // Αν ο sentinel ΔΕΝ φαίνεται (isIntersecting = false), βάλε την κλάση 'stuck'
+          if (!entries[0].isIntersecting) {
+              header.classList.add('stuck');
+          } else {
+              header.classList.remove('stuck');
+          }
+      });
+
+      observer.observe(sentinel);
+      const isUserLoggedIn = {{ 'true' if current_user.is_authenticated else 'false' }};
+  </script>
+  <script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+</body>
+</html>

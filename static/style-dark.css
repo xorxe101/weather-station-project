@@ -1,0 +1,460 @@
+/* --- STATIC/STYLE-DARK.CSS --- */
+/* Αυτό το αρχείο φορτώνεται ΜΟΝΟ όταν ενεργοποιηθεί το Dark Mode */
+
+:root {
+  --primary-color: #4d94ff; /* Πιο φωτεινό μπλε */
+  --secondary-color: #00aaff;
+  --background-color: #121212; /* Μαύρο φόντο */
+  --card-bg: #1e1e1e; /* Σκούρο γκρι για κάρτες */
+  --text-color: #e0e0e0; /* Ανοιχτό γκρι κείμενο */
+  --text-muted: #a0a0a0;
+}
+
+body {
+  background: var(--background-color);
+  color: var(--text-color);
+}
+
+/* Header, Cards, Modals, Mini Charts */
+.dashboard-header,
+.chart-card,
+.modal-box,
+.export-dropdown-content,
+.mini-chart {   /* <--- ΠΡΟΣΘΗΚΗ ΑΥΤΟΥ */
+  background: var(--card-bg) !important;
+  border: 1px solid #333 !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5) !important;
+}
+
+h1, h2, h3 { color: #fff !important; }
+
+/* Weather Boxes */
+.weather-box {
+  background: linear-gradient(145deg, #2d2d2d, #252525) !important;
+  border: 1px solid #333 !important;
+  box-shadow: none !important;
+}
+.weather-label { color: #bbb !important; }
+.weather-value { color: var(--primary-color) !important; }
+.weather-value.no-data { color: #555 !important; }
+
+/* Inputs */
+.modal-input {
+    background-color: #2d2d2d !important;
+    border-color: #444 !important;
+    color: #fff !important;
+}
+.modal-input:focus { border-color: var(--primary-color) !important; }
+
+/* Buttons */
+.control-btn, .action-btn, .modal-btn-secondary {
+    background: #2d2d2d !important;
+    color: #fff !important;
+    border-color: #444 !important;
+}
+.control-btn:hover, .action-btn:hover {
+    background: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+}
+
+/* User Controls & Status */
+.user-controls {
+    background: #1a2633 !important;
+    color: #fff !important;
+}
+.status-info, .last-update { color: #888 !important; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 12px; }
+::-webkit-scrollbar-track { background: #000000; }
+::-webkit-scrollbar-thumb { background-color: #444; border-radius: 6px; border: 3px solid #121212; }
+
+/* --- APEXCHARTS DARK MODE OVERRIDES --- */
+
+/* Γενικό κείμενο γραφημάτων (Άξονες, Τιμές) */
+.apexcharts-text {
+    fill: #ffffff !important;
+}
+
+/* Τίτλοι Γραφημάτων */
+.apexcharts-title-text {
+    fill: #ffffff !important;
+    font-weight: bold !important;
+}
+
+/* Υπόμνημα (Legend) */
+.apexcharts-legend-text {
+    color: #ffffff !important;
+}
+
+/* Γραμμές πλέγματος (Grid lines) - Πιο διακριτικές */
+.apexcharts-grid line {
+    stroke: #404040 !important;
+}
+
+/* Tooltip (Το κουτάκι που βγαίνει όταν ακουμπάς το ποντίκι) */
+.apexcharts-tooltip {
+    background: #1e1e1e !important;
+    border-color: #555 !important;
+    color: #fff !important;
+}
+
+.apexcharts-tooltip-title {
+    background: #333 !important;
+    border-bottom: 1px solid #555 !important;
+    font-family: inherit !important;
+}
+
+.apexcharts-tooltip-text {
+    color: #fff !important;
+}
+
+/* --- APEXCHARTS TOOLBAR & MENU (Dark Mode Fix) --- */
+
+/* 1. Τα εικονίδια της μπάρας εργαλείων (Zoom, Pan, Menu) να είναι λευκά */
+.apexcharts-toolbar svg {
+    fill: #ffffff !important;
+}
+
+/* 2. Το κουτί του μενού που ανοίγει (Dropdown) */
+.apexcharts-menu {
+    background: #1e1e1e !important;   /* Σκούρο φόντο (ίδιο με τις κάρτες) */
+    border: 1px solid #444 !important; /* Διακριτικό περίγραμμα */
+    color: #ffffff !important;         /* Λευκά γράμματα */
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5) !important;
+}
+
+/* 3. Τα αντικείμενα μέσα στο μενού (π.χ. Download PNG) */
+.apexcharts-menu-item {
+    color: #e0e0e0 !important;
+}
+
+/* 4. Όταν περνάς το ποντίκι από πάνω (Hover Effect) */
+.apexcharts-menu-item:hover {
+    background: #333333 !important;    /* Λίγο πιο ανοιχτό γκρι */
+    color: #ffffff !important;
+}
+
+/* Εξασφάλιση διαφάνειας για το καμβά του γραφήματος */
+.apexcharts-canvas, .apexcharts-svg, .apexcharts-inner {
+    background: transparent !important;
+}
+
+/* --- PROFILE BUTTONS (Dark Mode Fixes) --- */
+
+/* Logout Button: Διακριτικό Σκούρο Γκρι */
+.logout-btn {
+    background-color: #2c3e50 !important; /* Σκούρο μπλε-γκρι */
+    color: #b0c4de !important;            /* Ανοιχτό γκρι-μπλε γράμματα */
+    border: 1px solid #4a6985 !important;
+}
+
+.logout-btn:hover {
+    background-color: #34495e !important;
+    color: #ffffff !important;
+    border-color: #5d82a3 !important;
+}
+
+/* Delete Button: Βαθύ Κόκκινο (για να μη βγάζει μάτι) */
+.delete-btn-main {
+    background-color: #5a1a1a !important; /* Πολύ σκούρο κόκκινο */
+    color: #ffcccc !important;            /* Ανοιχτό ροζ γράμματα */
+    border: 1px solid #8a2be2 !important; /* Προσωρινό border, ας βάλουμε κόκκινο */
+    border-color: #a71d2a !important;     
+}
+
+.delete-btn-main:hover {
+    background-color: #dc3545 !important; /* Γίνεται έντονο κόκκινο στο hover */
+    color: #ffffff !important;
+    box-shadow: 0 0 10px rgba(220, 53, 69, 0.5) !important; /* Εφέ λάμψης */
+}
+
+/* --- EXPORT MENU DARK MODE FIX --- */
+
+/* 1. Οι επιλογές (Labels) να έχουν ξεκάθαρα λευκό χρώμα */
+.export-options label {
+    color: #e0e0e0 !important;
+    background-color: transparent !important; /* Σιγουριά ότι δεν έχει φόντο */
+}
+
+/* 2. Όταν περνάς το ποντίκι (Hover), να γίνεται ΣΚΟΥΡΟ γκρι (αντί για το άσπρο του Light Mode) */
+.export-options label:hover {
+    background-color: #333333 !important; /* Σκούρο γκρι */
+    color: #ffffff !important;            /* Κατάλευκα γράμματα */
+    cursor: pointer;
+}
+
+/* 3. Διόρθωση για το κουτί "Select All" αν φαίνεται διαφορετικό */
+#exportAll {
+    accent-color: var(--primary-color); /* Να έχει το μπλε χρώμα το κουτάκι */
+}
+
+/* --- DARK MODE GLASS --- */
+body {
+    /* Πιο σκούρο background gradient για το βράδυ */
+    background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%) fixed;
+}
+
+.chart-card {
+    background: rgba(0, 0, 0, 0.6); /* Μαύρο με διαφάνεια */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #e0e0e0;
+}
+
+.dashboard-header {
+    background-color: #1a1a1a !important;
+    
+    /* ΤΟ ΚΟΛΠΟ: Ορίζουμε το αρχικό περίγραμμα ως ΔΙΑΦΑΝΟ ΛΕΥΚΟ και όχι σκέτο διάφανο */
+    /* Έτσι η μετάβαση από το 0.15 στο 0 γίνεται ομαλά χωρίς φλας */
+    border-bottom: 1px solid rgba(255, 255, 255, 0); 
+    
+    transition: all 0.1s ease;
+}
+
+.dashboard-header.stuck {
+    background-color: #1a1a1a !important; /* Σιγουρεύουμε ότι μένει μαύρο */
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15); /* Το λευκό περίγραμμα */
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5); /* Σκούρα σκιά */
+}
+
+#floating-theme-btn {
+    background-color: #1e1e1e;
+    border-color: #333;
+    color: #fff;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+}
+
+#floating-theme-btn:hover {
+    background-color: #2d2d2d;
+    border-color: #555;
+}
+
+.alert-success {
+    background-color: #1e4d2b;
+    color: #d4edda;
+    border-color: #2b6b39;
+}
+
+.alert-error {
+    background-color: #5c1e23;
+    color: #f8d7da;
+    border-color: #8a2e36;
+}
+
+.skeleton {
+    /* Ορίζουμε τα σκούρα χρώματα */
+    background: linear-gradient(to right, #2d2d2d 4%, #3d3d3d 25%, #2d2d2d 36%);
+    
+    /* ΣΗΜΑΝΤΙΚΟ: Πρέπει να ξανα-ορίσουμε το μέγεθος, αλλιώς χαλάει το animation */
+    background-size: 1000px 100%; 
+
+    /* Επαναφορά στην ταχύτητα του Light Mode (2s) */
+    animation: shimmer 2s infinite linear;
+}
+
+/* --- DARK MODE TOAST (SOLID FULL COLOR) --- */
+/* Κάνουμε το κουτί ολόκληρο χρωματιστό και αφαιρούμε την πλαϊνή γραμμή */
+
+.toast {
+    color: #ffffff !important;            /* Λευκά γράμματα πάντα */
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+    border: none !important;              /* Αφαιρούμε το border-left αφού θα έχει χρώμα όλο */
+}
+
+/* 1. SUCCESS: Ολόκληρο Πράσινο */
+.toast.success {
+    background-color: #28a745 !important; /* Έντονο Πράσινο */
+    /* Προαιρετικά: Αν το θες πιο σκούρο/διακριτικό βάλε #1e7e34 */
+}
+
+/* 2. ERROR: Ολόκληρο Κόκκινο */
+.toast.error {
+    background-color: #dc3545 !important; /* Έντονο Κόκκινο */
+    /* Προαιρετικά: Αν το θες πιο σκούρο βάλε #bd2130 */
+}
+
+/* 3. INFO: Ολόκληρο Μπλε */
+.toast.info {
+    background-color: #007bff !important; /* Έντονο Μπλε */
+}
+
+.password-icon {
+    filter: invert(100%);
+    opacity: 0.9; /* Προαιρετικά: Λίγο πιο απαλό λευκό */
+}
+
+/* ========================================= */
+/* EXPORT MODAL DARK MODE OVERRIDES          */
+/* (Αυτό διορθώνει τα "λευκά" στοιχεία)      */
+/* ========================================= */
+
+/* 1. Το Κύριο Κουτί του Modal (Να μην είναι άσπρο) */
+.modal-box {
+    background-color: #1e1e1e !important; /* Σκούρο γκρι/μαύρο */
+    border: 1px solid #333 !important;    /* Διακριτικό περίγραμμα */
+    color: #e0e0e0 !important;            /* Ανοιχτόχρωμα γράμματα */
+    box-shadow: 0 10px 40px rgba(0,0,0,0.7) !important;
+}
+
+/* 2. Τίτλοι και Κείμενα μέσα στο Modal */
+.modal-title, 
+.modal-message, 
+.export-section-header p {
+    color: #ffffff !important;
+}
+
+/* 3. Labels (Start Time / End Time) */
+.date-input-wrapper label {
+    color: #cccccc !important;
+}
+
+/* 4. Τα Input Πεδία (Κατάμαυρα όπως ζήτησες) */
+.export-date-input,
+.modal-input {
+    background-color: #000000 !important; 
+    border: 1px solid #333 !important;
+    color: #ffffff !important;
+    box-shadow: inset 0 2px 5px rgba(0,0,0,0.5) !important;
+}
+
+/* Focus στα inputs */
+.export-date-input:focus,
+.modal-input:focus {
+    border-color: var(--primary-color) !important;
+    background-color: #000000 !important;
+}
+
+/* 5. Το ταμπελάκι "Max history limit" */
+.history-limit-text {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    color: #aaaaaa !important;
+}
+
+/* 6. Διαχωριστική γραμμή */
+.export-section-header {
+    border-bottom-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* 7. Κουμπί Select All */
+#btn-select-all {
+    color: #dddddd !important;
+    border-color: #666666 !important;
+}
+#btn-select-all:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    color: #ffffff !important;
+}
+
+/* 8. ΤΑ ΚΟΥΜΠΙΑ ΕΠΙΛΟΓΗΣ (Chips) - Εδώ ήταν το πρόβλημα */
+.export-option {
+    background-color: rgba(255, 255, 255, 0.05) !important; /* Ημιδιάφανο γκρι */
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    color: #eeeeee !important;
+    box-shadow: none !important;
+}
+
+/* Hover στα κουμπιά */
+.export-option:hover {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+    border-color: #ffffff !important;
+    transform: translateY(-2px);
+}
+
+/* Selected State (Μπλε) */
+.export-option.selected {
+    background-color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 15px rgba(77, 148, 255, 0.4) !important; /* Λάμψη */
+}
+
+/* 9. Κουμπί Cancel (Modal Secondary Button) */
+.modal-btn-secondary {
+    background-color: #2d2d2d !important;
+    color: #e0e0e0 !important;
+    border: 1px solid #444 !important;
+}
+.modal-btn-secondary:hover {
+    background-color: #3d3d3d !important;
+    color: #ffffff !important;
+}
+
+/* 10. Actions Container (Το περιθώριο που ζήτησες) */
+.modal-actions {
+    margin-top: 5px !important;
+    /*border-top: 1px solid rgba(255, 255, 255, 0.1) !important; /* Διακριτική γραμμή */
+}
+
+/* --- DARK MODE CALENDAR FIX (FINAL) --- */
+
+/* 1. Ρύθμιση του Input */
+.export-date-input {
+    /* Η "μαγική" εντολή: Λέει στον browser ότι το πεδίο είναι σκούρο. */
+    /* Ο browser αυτόματα θα κάνει το εικονίδιο ΛΕΥΚΟ και το popup ημερολόγιο ΣΚΟΥΡΟ. */
+    color-scheme: dark; 
+    
+    background-color: #000000 !important; 
+    color: #ffffff !important;
+    border: 1px solid #333 !important;
+}
+
+/* 2. Στυλ για το εικονίδιο */
+.export-date-input::-webkit-calendar-picker-indicator {
+    /* ΣΗΜΑΝΤΙΚΟ: Αφαιρούμε το invert γιατί το color-scheme το έκανε ήδη λευκό! */
+    filter: none !important; 
+    
+    opacity: 1 !important;        
+    cursor: pointer;              
+    
+    /* Αν θέλεις να μεγαλώσεις λίγο το εικονίδιο */
+    transform: scale(1.2); 
+    margin-left: 5px;
+}
+
+/* Dark Mode Adjustments */
+.compass-dial {
+    border-color: #555; background: rgba(40, 40, 40, 0.5);
+}
+.compass-label { color: #aaa; }
+.label-n { color: #ddd; }
+
+/* Dark Mode */
+.compass-tick::after {
+    background: #555;
+}
+.compass-tick.major::after {
+    background: #777;
+}
+
+/* Dark Mode */
+.thermometer-stem { background: #444; }
+.thermometer-bulb, .thermometer-fill { background: #ff4d4d; } /* Λίγο πιο φωτεινό κόκκινο */
+
+/* Dark Mode Adjustment */
+.humidity-widget {
+    /* Στο dark mode, το "άδειο" μέρος να είναι πιο σκούρο */
+    --empty-color: #444; 
+}
+
+/* Dark Mode για το χώμα */
+.ground-section {
+    border-top-color: #666;
+    background-image: repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 5px,
+        rgba(255, 255, 255, 0.05) 5px,
+        rgba(255, 255, 255, 0.05) 7px
+    );
+}
+
+/* --- DARK MODE FIXES --- */
+.gauge-widget {
+    background: rgba(40, 40, 40, 0.5); 
+    border-color: #555; /* Το περίγραμμα γίνεται σκούρο γκρι */
+    box-shadow: inset 0 2px 5px rgba(0,0,0,0.3);
+}
+
+.gauge-pivot {
+    border-color: #333; /* Το περίγραμμα της βίδας προσαρμόζεται στο dark mode */
+}

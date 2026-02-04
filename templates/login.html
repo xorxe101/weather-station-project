@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login - Weather Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="{{ url_for('static', filename='img_icon/lock.ico') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=13">
+</head>
+<body>
+    <div class="dashboard-header">
+        <h1>Login</h1>
+        <a href="/" class="control-btn">Back to Dashboard</a>
+    </div>
+
+    <div class="chart-card" style="max-width: 500px; margin: 3rem auto; text-align: center;">
+        <h2 style="font-size: 1.5rem; margin-bottom: 1.5rem;">Welcome Back</h2>
+        
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div id="flash-message" style="background-color: #ffe6e6; color: #cc0000; padding: 1rem; border-radius: 12px; margin-bottom: 20px; border: 1px solid #ffcccc; font-size: 1rem;">
+                    {% for message in messages %} {{ message }} {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="/login">
+            <input type="text" 
+                name="username" 
+                maxlength="32" 
+                placeholder="Username" 
+                required 
+                class="modal-input" 
+                style="margin-bottom: 15px;"
+                oninput="this.value = this.value.replace(/[^\p{L}\p{N}_]/gu, '')">
+            
+            <div class="password-wrapper">
+                <input type="hidden" name="password" id="real-pass">
+                
+                <input type="text" id="visible-pass" maxlength="32" placeholder="Password" class="modal-input" autocomplete="off" required>
+                
+                <button type="button" class="password-toggle" id="toggle-btn">
+                    <img src="{{ url_for('static', filename='img_icon/show.png') }}" class="password-icon" alt="Show Password">
+                </button>
+            </div>
+            
+            <button type="submit" class="control-btn" style="width: 100%; padding: 15px; font-size: 1.1rem;">Login</button>
+        </form>
+        
+        <p style="margin-top: 25px; color: #666; font-size: 1rem;">
+            New user? <a href="/signup" style="color: #0066cc; font-weight: bold; text-decoration: none;">Create an account</a>
+        </p>
+    </div>
+    <script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+    <script>
+        // Ενεργοποίηση Mobile Password Logic (αν το θέλεις και εδώ)
+        document.addEventListener("DOMContentLoaded", function() {
+            // Βεβαιώσου ότι τα ID ταιριάζουν με αυτά που έχεις στο HTML σου
+            if(document.getElementById('visible-pass')) {
+                initMobilePassword('visible-pass', 'real-pass', document.getElementById('toggle-btn'));
+            }
+        });
+
+        // Απόκρυψη μηνυμάτων (Flash messages)
+        setTimeout(function() {
+            var flash = document.getElementById('flash-message');
+            if (flash) { flash.style.transition = "opacity 0.5s ease"; flash.style.opacity = "0"; setTimeout(function(){ flash.remove(); }, 500); }
+        }, 2000);
+    </script>
+    <button id="floating-theme-btn" class="action-btn" onclick="toggleTheme()" title="Toggle Theme">
+        <img src="{{ url_for('static', filename='img_icon/moon.png') }}" 
+            class="theme-icon" 
+            style="margin: 0; width: 24px; height: 24px;">
+    </button>
+</body>
+</html>

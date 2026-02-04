@@ -1,0 +1,4 @@
+__pycache__/
+sensor_history.json
+instance/
+.env

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Weather Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+  <link rel="icon" href="{{ url_for('static', filename='dashboard.ico') }}">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    .weather-value.no-data {
+      color: #999;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-header">
+    <h1>Weather Dashboard</h1>
+    <div class="status-info">
+      <div>Auto-refresh: <span id="refreshStatus">Enabled</span></div>
+      <div>Last update: <span id="lastUpdate">-</span></div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="control-btn" onclick="loadData()">Refresh Now</button>
+    <button class="control-btn" onclick="toggleAutoRefresh()">Toggle Auto-refresh</button>
+    <button class="control-btn" onclick="changeTimeRange(1)">Last Hour</button>
+    <button class="control-btn" onclick="changeTimeRange(6)">Last 6 Hours</button>
+    <button class="control-btn" onclick="changeTimeRange(12)">Last 12 Hours</button>
+    <button class="control-btn" onclick="changeTimeRange(24)">Last 24 Hours</button>
+  </div>
+
+  <div id="latest" class="chart-card"></div>
+  
+  <div class="chart-grid">
+    <div class="chart-card">
+      <div class="chart-container" id="tempChart"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-container" id="humidityChart"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-container" id="pressureChart"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-container" id="windspeedChart"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-container" id="winddirectionChart"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-container" id="rainfallrateChart"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-container" id="dewpointChart"></div>
+    </div>
+  </div>
+
+  <div class="last-update">
+    Data updates every minute | <span id="currentTime"></span>
+  </div>
+  <script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+</body>
+</html>

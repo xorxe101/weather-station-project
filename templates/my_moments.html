@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Saved Moments</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="{{ url_for('static', filename='img_icon/moments.ico') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=13">
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <style>
+        .moment-charts { 
+            display: none; 
+            margin-top: 25px; /* Scaled */
+            padding-top: 25px; 
+            border-top: 1px dashed #ccc; 
+        }
+        
+        .charts-wrapper {
+            display: grid;
+            /* SCALED: 300px -> 375px */
+            grid-template-columns: repeat(auto-fit, minmax(375px, 1fr));
+            gap: 10px;  /* <--- ΑΛΛΑΓΗ ΕΔΩ (Ήταν 25px) */
+            width: 100%; 
+            box-sizing: border-box;
+        }
+
+        .mini-chart { 
+            background: #ffffff; 
+            border-radius: 16px; 
+            padding: 10px; /* <--- ΑΛΛΑΓΗ ΕΔΩ (Ήταν 15px) */
+            min-height: 400px; /* SCALED: 320 -> 400 */
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border: 1px solid #eee;
+            width: 100%; 
+            box-sizing: border-box;
+            overflow: hidden; 
+        }
+
+        /* Mobile Fixes */
+        @media screen and (max-width: 480px) {
+            .charts-wrapper {
+                grid-template-columns: 1fr; 
+                gap: 15px;
+            }
+            .chart-card {
+                padding: 15px;
+            }
+        }
+
+        .toggle-btn { background: #f0f0f0; color: #333; border: 1px solid #ccc; width: 100%; margin-top: 20px; padding: 12px; font-size: 1rem; cursor: pointer; border-radius: 12px; }
+        /* --- DELETE BUTTON STYLE FIX --- */
+        .delete-btn { 
+            background: transparent !important; /* Πάντα διάφανο */
+            border: none; 
+            font-size: 1.5rem; 
+            cursor: pointer;
+            padding: 5px; /* Μικρό padding */
+            border-radius: 6px; 
+            transition: transform 0.2s ease; /* Μόνο κίνηση, όχι χρώμα */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .delete-btn:hover { 
+            background-color: transparent !important; /* Καμία αλλαγή χρώματος στο hover */
+            transform: scale(1.1); /* Μόνο μεγέθυνση για εφέ */
+        }
+
+        /* Σιγουρεύουμε ότι η εικόνα δεν έχει περίεργα όρια */
+        .delete-btn img {
+            display: block;
+            background: transparent !important;
+        }
+        .danger-btn { background-color: #dc3545; color: white; border: none; padding: 0.9rem 1.2rem; border-radius: 10px; cursor: pointer; font-size: 1rem; font-weight: 600; text-decoration: none; }
+        .danger-btn:hover { background-color: #c82333; }
+    </style>
+</head>
+<body>
+    <div class="dashboard-header">
+        <h1>Saved Moments for {{ username }}</h1>
+        <div style="display: flex; gap: 10px;">
+            <a href="/" class="control-btn">Back to Dashboard</a>
+        </div>
+    </div>
+    
+    <div class="chart-grid" id="moments-grid">
+        {% if moments|length == 0 %}
+        <div class="chart-card no-moments" style="grid-column: 1/-1; text-align: center; padding: 40px;">
+            <h3>No moments saved yet!</h3>
+            <p>Go to the dashboard and click "Save Moment" to capture the weather</p>
+        </div>
+        {% endif %}
+
+        {% for moment in moments %}
+        <div class="chart-card" id="card-{{ moment.id }}" style="position: relative;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div onclick="toggleMobileDetails({{ moment.id }})" style="cursor: pointer; flex-grow: 1;">
+                    <h3 style="margin: 0; color: #0066cc; display: flex; align-items: center; gap: 10px;">
+                        {{ moment.note }}
+                        <img src="{{ url_for('static', filename='img_icon/arrow-down.png') }}" 
+                            id="arrow-{{ moment.id }}" 
+                            class="mobile-toggle-icon" 
+                            alt="Expand">
+                        </img>
+                    </h3>
+                    <span style="font-size: 0.9em; color: #666;">{{ moment.date }}</span>
+                </div>
+
+                <button class="delete-btn" onclick="deleteMoment({{ moment.id }})" title="Delete this moment" style="padding: 0;">
+                    <img src="{{ url_for('static', filename='img_icon/trash.png') }}" 
+                         class="trash-icon"
+                         alt="Delete" 
+                         style="width: 34px; height: 34px; vertical-align: middle; transition: transform 0.2s;">
+                </button>
+            </div>
+            
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 10px 0;">
+            
+            <div id="details-{{ moment.id }}" class="moment-details">
+                
+                {% if moment.current %}
+                <div class="current-weather">
+                    {% if moment.current.get('Air Temperature') is not none %}
+                    <div class="weather-box"><div class="weather-label">Air Temp</div><div class="weather-value">{{ moment.current.get('Air Temperature') }}°C</div></div>
+                    {% endif %}
+                    {% if moment.current.get('Soil Temperature') is not none %}
+                    <div class="weather-box"><div class="weather-label">Gnd Temp</div><div class="weather-value">{{ moment.current.get('Soil Temperature') }}°C</div></div>
+                    {% endif %}
+                    {% if moment.current.get('Humidity') is not none %}
+                    <div class="weather-box"><div class="weather-label">Humidity</div><div class="weather-value">{{ moment.current.get('Humidity') }}%</div></div>
+                    {% endif %}
+                    {% if moment.current.get('WindSpeed') is not none %}
+                    <div class="weather-box"><div class="weather-label">Wind Speed</div><div class="weather-value">{{ moment.current.get('WindSpeed') }} km/h</div></div>
+                    {% endif %}
+                    {% if moment.current.get('WindDirection') is not none %}
+                    <div class="weather-box"><div class="weather-label">Wind Dir</div><div class="weather-value">{{ moment.current.get('WindDirection') }}°</div></div>
+                    {% endif %}
+                    {% if moment.current.get('RainFall') is not none %}
+                    <div class="weather-box"><div class="weather-label">Rainfall</div><div class="weather-value">{{ moment.current.get('RainFall') }} mm</div></div>
+                    {% endif %}
+                    {% if moment.current.get('RainRate') is not none %}
+                    <div class="weather-box"><div class="weather-label">Rain Rate</div><div class="weather-value">{{ moment.current.get('RainRate') }} mm/h</div></div>
+                    {% endif %}
+                    {% if moment.current.get('DewPoint') is not none %}
+                    <div class="weather-box"><div class="weather-label">Dew Point</div><div class="weather-value">{{ moment.current.get('DewPoint') }}°C</div></div>
+                    {% endif %}
+                    {% if moment.current.get('Pressure') is not none %}
+                    <div class="weather-box"><div class="weather-label">Pressure</div><div class="weather-value">{{ moment.current.get('Pressure') }} hPa</div></div>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                {% if moment.history|length > 0 %}
+                    <button class="control-btn toggle-btn" onclick="toggleCharts({{ moment.id }})" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <img src="{{ url_for('static', filename='img_icon/graph.png') }}" 
+                            alt="Graphs" 
+                            style="width: 20px; height: 20px;">
+                        Show Graphs
+                    </button>
+                    <div id="charts-container-{{ moment.id }}" class="moment-charts">
+                        <div class="charts-wrapper">
+                            <div id="temp-chart-{{ moment.id }}" class="mini-chart"></div>
+                            <div id="humidity-chart-{{ moment.id }}" class="mini-chart"></div>
+                            <div id="pressure-chart-{{ moment.id }}" class="mini-chart"></div>
+                            <div id="wind-chart-{{ moment.id }}" class="mini-chart"></div>
+                            <div id="wind-dir-chart-{{ moment.id }}" class="mini-chart"></div>
+                            <div id="rain-chart-{{ moment.id }}" class="mini-chart"></div>
+                            <div id="dew-chart-{{ moment.id }}" class="mini-chart"></div>
+                        </div>
+                    </div>
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                            const historyData = {{ moment.history | tojson }};
+                            renderMomentCharts({{ moment.id }}, historyData);
+                        });
+                    </script>
+                {% else %}
+                    <p style="text-align: center; color: #999; font-style: italic; margin-top: 10px;">(No historical data saved)</p>
+                {% endif %}
+            
+            </div> </div>
+        {% endfor %}
+    </div>
+    <script>
+        // --- POPUP MODAL LOGIC (Updated with Auto-Focus) ---
+        function createModalHTML() {
+            if (document.getElementById('custom-modal')) return;
+            const div = document.createElement('div');
+            div.id = 'custom-modal'; div.className = 'modal-overlay';
+            div.innerHTML = `<div class="modal-box"><h3 id="modal-title" class="modal-title"></h3><div id="modal-content"></div><div id="modal-actions" class="modal-actions"></div></div>`;
+            document.body.appendChild(div);
+        }
+
+        function showModal(title, contentHTML, actions) {
+            createModalHTML();
+            const modal = document.getElementById('custom-modal');
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-content').innerHTML = contentHTML;
+            
+            const actionContainer = document.getElementById('modal-actions');
+            actionContainer.innerHTML = '';
+            
+            if (actions && actions.length > 0) {
+                actions.forEach(action => {
+                    const btn = document.createElement('button');
+                    btn.textContent = action.text; 
+                    btn.className = `modal-btn ${action.class || 'modal-btn-primary'}`;
+                    btn.onclick = () => { if (action.onClick) action.onClick(); if (action.close !== false) closeModal(); };
+                    actionContainer.appendChild(btn);
+                });
+            }
+            
+            setTimeout(() => {
+                modal.classList.add('show');
+                
+                // --- NEW: Auto-Focus for Enter Key Support ---
+                const dangerBtn = modal.querySelector('.modal-btn-danger');
+                const primaryBtn = modal.querySelector('.modal-btn-primary');
+                
+                if (dangerBtn) {
+                    dangerBtn.focus(); // Focus the Delete button
+                } else if (primaryBtn) {
+                    primaryBtn.focus(); // Focus the OK/Primary button
+                }
+            }, 10);
+        }
+        
+        function closeModal() { const modal = document.getElementById('custom-modal'); if (modal) modal.classList.remove('show'); }
+
+        function deleteAccount() {
+            showModal("⚠️ Delete Account", `<p class="modal-message">Are you sure you want to delete your account? <br><br><b>This cannot be undone.</b></p>`, [
+                { text: "Cancel", class: "modal-btn-secondary" },
+                { text: "Permanently Delete", class: "modal-btn-danger", onClick: async () => { try { const r = await fetch('/api/delete_account', { method: 'DELETE' }); const j = await r.json(); if(j.success) window.location.href = "/"; else setTimeout(()=>showModal("Error",`<p>${j.error}</p>`,[{text:"OK"}]),300); } catch(e){alert("Connection failed");} } }
+            ]);
+        }
+        function deleteMoment(id) {
+            showModal("Delete Moment", `<p class="modal-message">Delete this saved moment?</p>`, [
+                { text: "Cancel", class: "modal-btn-secondary" },
+                { 
+                    text: "Delete", 
+                    class: "modal-btn-danger", 
+                    onClick: async () => { 
+                        try { 
+                            const r = await fetch(`/api/delete_moment/${id}`, { method: 'DELETE' }); 
+                            const j = await r.json(); 
+                            
+                            if(j.success) { 
+                                // ΑΛΛΑΓΗ ΕΔΩ: Κάνουμε Refresh τη σελίδα αντί για απλή αφαίρεση
+                                window.location.reload(); 
+                            } else {
+                                setTimeout(()=>showModal("Error",`<p>${j.error}</p>`,[{text:"OK"}]),300); 
+                            }
+                        } catch(e){
+                            console.error(e);
+                            alert("Connection failed");
+                        } 
+                    } 
+                }
+            ]);
+        }
+
+        function toggleCharts(id) {
+            const container = document.getElementById(`charts-container-${id}`);
+            if (container.style.display === "block") container.style.display = "none";
+            else { container.style.display = "block"; window.dispatchEvent(new Event('resize')); }
+        }
+        
+        function parseDate(isoString) { 
+            if (!isoString) return new Date();
+            const parts = isoString.split(/[-T:]/); 
+            return new Date(parts[0], parts[1]-1, parts[2], parts[3], parts[4], parts[5]||0); 
+        }
+        
+        function getValue(row, key) {
+            const keys = [key, key.toLowerCase(), key.replace(' ', ''), key.replace(' ', '').toLowerCase()];
+            for (const k of keys) {
+                if (row[k] !== undefined && row[k] !== null) {
+                    const num = parseFloat(row[k]);
+                    return isNaN(num) ? null : num;
+                }
+            }
+            return null;
+        }
+
+        function renderMomentCharts(id, history) {
+            // 1. ΡΥΘΜΙΣΕΙΣ DARK MODE (Αντιγραφή από Dashboard Logic)
+            const isDark = localStorage.getItem('theme') === 'dark';
+            const textColor = isDark ? '#ffffff' : '#666666';
+            const gridColor = isDark ? '#404040' : '#f0f0f0';
+            const tooltipTheme = isDark ? 'dark' : 'light';
+
+            // 2. ΚΟΙΝΕΣ ΡΥΘΜΙΣΕΙΣ
+            const commonOptions = { 
+                chart: { 
+                    type: 'line', 
+                    height: 350, 
+                    background: 'transparent', // ΣΗΜΑΝΤΙΚΟ: Διάφανο φόντο
+                    foreColor: textColor,      // Σωστό χρώμα κειμένου (Άξονες κλπ)
+                    toolbar: { show: true, tools: { download: true, selection: true, zoom: true, zoomin: true, zoomout: true, pan: true, reset: true } },
+                    animations: { enabled: true, easing: 'easein', speed: 800 }
+                }, 
+                xaxis: { 
+                    type: 'datetime', 
+                    labels: { 
+                        datetimeUTC: false, 
+                        format: 'HH:mm', 
+                        style: { colors: textColor, fontSize: '14px' } // Δυναμικό χρώμα
+                    } 
+                },
+                yaxis: { 
+                    labels: { style: { colors: textColor, fontSize: '14px' } } // Δυναμικό χρώμα
+                }, 
+                zoom: { enabled: true, type: 'x', autoScaleYaxis: true },
+                selection: { enabled: true },
+                grid: { borderColor: gridColor, strokeDashArray: 3 }, // Δυναμικό χρώμα πλέγματος
+                stroke: { width: 2, curve: 'smooth' }, 
+                markers: { size: 0, hover: { size: 5 } },
+                tooltip: { 
+                    x: { format: 'HH:mm dd MMM yyyy' }, 
+                    theme: tooltipTheme, // Σωστό θέμα tooltip (μαύρο/άσπρο)
+                    shared: true, 
+                    intersect: false 
+                }
+            };
+            
+            const getSeries = (key) => history.map(row => ({ x: parseDate(row.Time).getTime(), y: getValue(row, key) })).filter(p => p.x && !isNaN(p.x));
+
+            // 3. ΔΗΜΙΟΥΡΓΙΑ ΓΡΑΦΗΜΑΤΩΝ (Περνάμε το textColor και στους τίτλους)
+            
+            new ApexCharts(document.querySelector(`#temp-chart-${id}`), { 
+                ...commonOptions, 
+                series: [{ name: 'Air Temp', data: getSeries('Air Temperature') }, { name: 'Ground Temp', data: getSeries('Soil Temperature') }], 
+                colors: ['#FF4560', '#00E396'], 
+                title: { text: 'Temperature (°C)', style: { fontSize: '14px', fontWeight:'bold', color: textColor } } 
+            }).render();
+
+            new ApexCharts(document.querySelector(`#humidity-chart-${id}`), {
+                ...commonOptions, series: [{ name: 'Humidity', data: getSeries('Humidity') }], colors: ['#775DD0'],
+                title: { text: 'Humidity (%)', style: { fontSize: '14px', fontWeight:'bold', color: textColor } }
+            }).render();
+
+            new ApexCharts(document.querySelector(`#pressure-chart-${id}`), {
+                ...commonOptions, series: [{ name: 'Pressure', data: getSeries('Pressure') }], colors: ['#546E7A'],
+                title: { text: 'Pressure (hPa)', style: { fontSize: '14px', fontWeight:'bold', color: textColor } }
+            }).render();
+
+            new ApexCharts(document.querySelector(`#wind-chart-${id}`), {
+                ...commonOptions, series: [{ name: 'Wind Speed', data: getSeries('WindSpeed') }], colors: ['#00D9E9'],
+                title: { text: 'Wind Speed (km/h)', style: { fontSize: '14px', fontWeight:'bold', color: textColor } }
+            }).render();
+
+            new ApexCharts(document.querySelector(`#wind-dir-chart-${id}`), {
+                ...commonOptions, series: [{ name: 'Wind Direction', data: getSeries('WindDirection') }], colors: ['#FFB800'],
+                title: { text: 'Wind Direction (°)', style: { fontSize: '14px', fontWeight:'bold', color: textColor } }
+            }).render();
+
+            new ApexCharts(document.querySelector(`#rain-chart-${id}`), {
+                ...commonOptions, 
+                series: [{ name: 'RainFall (mm)', data: getSeries('RainFall') }, { name: 'RainRate (mm/h)', data: getSeries('RainRate') }], 
+                colors: ['#008FFB', '#FEB019'],
+                title: { text: 'Rainfall & Rate', style: { fontSize: '14px', fontWeight:'bold', color: textColor } }
+            }).render();
+
+            new ApexCharts(document.querySelector(`#dew-chart-${id}`), {
+                ...commonOptions, series: [{ name: 'Dew Point', data: getSeries('DewPoint') }], colors: ['#8E44AD'],
+                title: { text: 'Dew Point (°C)', style: { fontSize: '14px', fontWeight:'bold', color: textColor } }
+            }).render();
+        }
+
+        // --- UNIVERSAL DROPDOWN LOGIC ---
+        function toggleMobileDetails(id) {
+            const arrow = document.getElementById(`arrow-${id}`);
+            const details = document.getElementById(`details-${id}`);
+            
+            // Toggle classes
+            if (details.classList.contains('show')) {
+                details.classList.remove('show');
+                arrow.classList.remove('rotate');
+            } else {
+                details.classList.add('show');
+                arrow.classList.add('rotate');
+            }
+        }
+
+        // --- SMART AUTO-OPEN LOGIC ---
+        document.addEventListener("DOMContentLoaded", function() {
+            // Βρίσκουμε όλα τα moments στη σελίδα
+            const allMoments = document.querySelectorAll('.moment-details');
+            const allArrows = document.querySelectorAll('.mobile-toggle-icon');
+            
+            // ΟΡΙΟ: Αν είναι 2 ή λιγότερα, άνοιξέ τα όλα αυτόματα
+            const AUTO_OPEN_LIMIT = 2;
+
+            if (allMoments.length > 0 && allMoments.length <= AUTO_OPEN_LIMIT) {
+                // Άνοιγμα λεπτομερειών
+                allMoments.forEach(el => el.classList.add('show'));
+                // Περιστροφή βελών
+                allArrows.forEach(el => el.classList.add('rotate'));
+            }
+        });
+    </script>
+    </div>
+    <script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+    <button id="floating-theme-btn" class="action-btn" onclick="toggleTheme()" title="Toggle Theme">
+        <img src="{{ url_for('static', filename='img_icon/moon.png') }}" 
+            class="theme-icon" 
+            style="margin: 0; width: 24px; height: 24px;">
+    </button>
+</body>
+</html>
