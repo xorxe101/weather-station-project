@@ -1614,3 +1614,187 @@ button:focus, a:focus, input:focus, textarea:focus {
 .gauge-widget.val-danger .gauge-pivot,
 .gauge-widget.val-extreme .gauge-needle,
 .gauge-widget.val-extreme .gauge-pivot { background: #ff4560; }
+
+/* --- RAINFALL GAUGE STYLES --- */
+
+.rain-widget-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end; /* Το νερό θα "κάθεται" στον πάτο */
+    height: 70px;
+    margin-bottom: 5px;
+}
+
+/* Ο κύλινδρος (το δοχείο) */
+.rain-gauge {
+    position: relative;
+    width: 35px;
+    height: 60px;
+    border: 2px solid #d0d0d0;
+    border-radius: 0 0 10px 10px; /* Στρογγυλεμένος πάτος */
+    background: rgba(255, 255, 255, 0.1);
+    overflow: hidden; /* Για να μην βγαίνει το νερό έξω από το σχήμα */
+}
+
+/* Το νερό μέσα στον κύλινδρο */
+.rain-water {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    background: #3399ff; /* Μπλε του νερού */
+    transition: height 1s ease-out; /* Ομαλό γέμισμα */
+    box-shadow: inset 0 2px 5px rgba(255,255,255,0.3);
+}
+
+/* Γραμμές μέτρησης πάνω στο γυαλί */
+.rain-gauge::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-image: linear-gradient(to bottom, 
+        transparent 18%, #ccc 20%, 
+        transparent 38%, #ccc 40%, 
+        transparent 58%, #ccc 60%, 
+        transparent 78%, #ccc 80%);
+    background-size: 100% 100%;
+    opacity: 0.5;
+    z-index: 2;
+}
+
+/* --- RAINRATE WIDGET STYLES --- */
+
+.rainrate-widget {
+    position: relative;
+    height: 70px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Το εικονίδιο του σύννεφου */
+.cloud-icon {
+    width: 40px;
+    height: 40px;
+    color: #888;
+    z-index: 2;
+}
+
+/* Το κοντέινερ για τις σταγόνες */
+.rain-drops-container {
+    position: absolute;
+    top: 35px;
+    display: flex;
+    gap: 8px;
+    z-index: 1;
+}
+
+/* Η κάθε σταγόνα (γραμμή) */
+.rain-drop {
+    width: 2px;
+    height: 10px;
+    background: currentColor; /* Παίρνει το χρώμα από το widget */
+    border-radius: 2px;
+    opacity: 0;
+}
+
+/* Animation για τη βροχή */
+@keyframes fall {
+    0% { transform: translateY(-10px); opacity: 0; }
+    50% { opacity: 1; }
+    100% { transform: translateY(20px); opacity: 0; }
+}
+
+/* Κλάσεις για την ταχύτητα ανάλογα με την ένταση */
+.rain-active .rain-drop {
+    animation: fall var(--rain-speed) linear infinite;
+}
+
+/* Διαφορετικό delay για να μην πέφτουν όλες μαζί */
+.rain-drop:nth-child(2) { animation-delay: 0.2s; }
+.rain-drop:nth-child(3) { animation-delay: 0.4s; }
+
+/* --- DEW POINT WIDGET STYLES --- */
+
+.dew-point-widget {
+    position: relative;
+    width: 50px;
+    height: 70px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: center;
+}
+
+/* Η μικρή σταγόνα που "επιπλέει" πάνω στο υγρό */
+.dew-indicator-drop {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background: #3399ff; /* Μπλε χρώμα δρόσου */
+    border-radius: 0 50% 50% 50%;
+    transform: rotate(45deg);
+    left: 50%;
+    margin-left: -5px;
+    bottom: var(--drop-position); /* Θα ελέγχεται από τη JS */
+    transition: bottom 0.8s ease-out;
+    z-index: 3;
+    box-shadow: 0 0 5px rgba(51, 153, 255, 0.2);
+    animation: drip 2s ease-in-out infinite;
+}
+
+@keyframes drip {
+    0%, 100% { transform: rotate(45deg) scale(1); }
+    50% { transform: rotate(45deg) scale(1.1); }
+}
+
+/* --- PRESSURE BAROMETER STYLES --- */
+
+.pressure-widget {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    margin: 0 auto;
+    border: 2px solid #d0d0d0;
+    border-radius: 50%; /* Τέλειος κύκλος */
+    background: rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
+}
+
+/* Η βελόνα του βαρόμετρου */
+.pressure-needle {
+    position: absolute;
+    width: 2px;
+    height: 35px;
+    background: #ff4560; /* Κλασικό κόκκινο βελόνας */
+    bottom: 50%; /* Η βάση της είναι στο κέντρο */
+    left: 50%;
+    margin-left: -1px;
+    transform-origin: bottom center;
+    transition: transform 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 5;
+}
+
+/* Η κεντρική βίδα */
+.pressure-center {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: #555;
+    border-radius: 50%;
+    z-index: 6;
+    border: 1px solid #fff;
+}
+
+/* Γραμμές κλίμακας (Ticks) */
+.pressure-widget::before {
+    content: 'L . . . H'; /* Ενδείξεις Low / High */
+    position: absolute;
+    bottom: 10px;
+    font-size: 8px;
+    font-weight: bold;
+    color: #888;
+    letter-spacing: 2px;
+}

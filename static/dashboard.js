@@ -811,15 +811,118 @@ function createWeatherBox(label, value, unit) {
         </div>`;
     }
 
-    // --- 5. ΓΙΑ ΤΑ ΥΠΟΛΟΙΠΑ ---
-    let iconSVG = '';
-    const iconHTML = iconSVG ? `<svg class="weather-icon" viewBox="0 0 24 24">${iconSVG}</svg>` : '';
+    // --- 5. RAINFALL (Rain Gauge) ---
+    if (label === 'Rainfall') {
+        // Υπολογισμός ποσοστού: Έστω 50mm είναι το "γεμάτο" δοχείο
+        let maxRain = 50; 
+        let percent = (value / maxRain) * 100;
+        percent = Math.max(0, Math.min(100, percent)); // Κόφτης 0-100%
 
+        return `
+        <div class="weather-box">
+            <div class="weather-label">${label}</div>
+            
+            <div class="rain-widget-wrapper">
+                <div class="rain-gauge">
+                    <div class="rain-water" style="height: ${percent}%;"></div>
+                </div>
+            </div>
+
+            <div class="${displayClass}" style="margin-top: 5px;">${displayValue}<span class="unit">${unit}</span></div>
+        </div>`;
+    }
+
+    // --- 6. RAINRATE (Animated Cloud) ---
+    if (label === 'Rainrate') {
+        let speed = "0s";
+        let activeClass = "";
+        
+        if (value > 0) {
+            activeClass = "rain-active";
+            // Όσο μεγαλύτερο το value, τόσο μικρότερο το duration (πιο γρήγορη βροχή)
+            // 0.1mm/hr -> 1.5s (αργά), 20mm/hr -> 0.3s (πολύ γρήγορα)
+            let calculatedSpeed = 1.5 - (Math.min(value, 20) / 20) * 1.2;
+            speed = calculatedSpeed + "s";
+        }
+
+        return `
+        <div class="weather-box">
+            <div class="weather-label">${label}</div>
+            
+            <div class="rainrate-widget ${colorClass} ${activeClass}" style="--rain-speed: ${speed}">
+                <svg class="cloud-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 10h-1.26A8 8 0 1 0 4 15.25"></path>
+                    <path d="M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25"></path>
+                </svg>
+                
+                <div class="rain-drops-container">
+                    <div class="rain-drop"></div>
+                    <div class="rain-drop"></div>
+                    <div class="rain-drop"></div>
+                </div>
+            </div>
+
+            <div class="${displayClass}" style="margin-top: 5px;">${displayValue}<span class="unit">${unit}</span></div>
+        </div>`;
+    }
+
+    // --- 7. DEW POINT (Thermometer with Floating Drop) ---
+    if (label === 'Dew Point') {
+        const minTemp = -5;
+        const maxTemp = 45;
+        let percent = ((value - minTemp) / (maxTemp - minTemp)) * 100;
+        percent = Math.max(0, Math.min(100, percent));
+        
+        // Υπολογίζουμε τη θέση της σταγόνας ώστε να ακολουθεί τη στάθμη (περίπου 15px-55px)
+        let dropPos = 15 + (percent * 0.4); 
+
+        return `
+        <div class="weather-box">
+            <div class="weather-label">${label}</div>
+            
+            <div class="dew-point-widget ${colorClass}">
+                <div class="dew-indicator-drop" style="--drop-position: ${dropPos}px"></div>
+                
+                <div class="thermometer-widget ${colorClass}">
+                    <div class="thermometer-stem">
+                        <div class="thermometer-fill" style="height: ${percent}%;"></div>
+                    </div>
+                    <div class="thermometer-bulb"></div>
+                </div>
+            </div>
+
+            <div class="${displayClass}" style="margin-top: 5px;">${displayValue}<span class="unit">${unit}</span></div>
+        </div>`;
+    }
+
+    // --- 8. PRESSURE (Analog Barometer) ---
+    if (label === 'Pressure') {
+        const minP = 950;
+        const maxP = 1050;
+        // Περιορισμός τιμής στα όρια
+        let safeValue = Math.max(minP, Math.min(maxP, value || 1013));
+        
+        // Υπολογισμός γωνίας: 950 -> -120deg, 1050 -> 120deg
+        let rotation = ((safeValue - minP) / (maxP - minP)) * 240 - 120;
+
+        return `
+        <div class="weather-box">
+            <div class="weather-label">${label}</div>
+            
+            <div class="pressure-widget">
+                <div class="pressure-needle" style="transform: rotate(${rotation}deg);"></div>
+                <div class="pressure-center"></div>
+            </div>
+
+            <div class="${displayClass}" style="margin-top: 5px;">${displayValue}<span class="unit">${unit}</span></div>
+        </div>`;
+    }
+
+    // --- 9. DEFAULT ΓΙΑ ΟΤΙΔΗΠΟΤΕ ΑΛΛΟ ---
     return `
     <div class="weather-box">
         <div class="weather-label">${label}</div>
         <div class="weather-content-wrapper">
-            ${iconHTML}
             <div class="${displayClass}">${displayValue}<span class="unit">${unit}</span></div>
         </div>
     </div>`;

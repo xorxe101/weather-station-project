@@ -458,3 +458,20 @@ body {
 .gauge-pivot {
     border-color: #333; /* Το περίγραμμα της βίδας προσαρμόζεται στο dark mode */
 }
+
+/* Dark Mode */
+.rain-gauge {
+    border-color: #555;
+    background: rgba(40, 40, 40, 0.5);
+}
+
+/* Dark Mode προσαρμογή */
+.dew-indicator-drop {
+    background: #50aaff;
+}
+
+/* Dark Mode */
+.pressure-widget {
+    border-color: #555;
+    background: rgba(40, 40, 40, 0.5);
+}
