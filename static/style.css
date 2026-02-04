@@ -800,14 +800,16 @@ button:focus, a:focus, input:focus, textarea:focus {
     box-shadow: none !important;
 }
 
-/* Πλάτος μπάρας */
+/* 1. Το πλάτος της μπάρας */
 ::-webkit-scrollbar {
-    width: 8px;
+    width: 10px;
+    height: 10px;
 }
 
-/* Το αυλάκι της μπάρας */
+/* 2. Το "κανάλι" (το πίσω μέρος) */
 ::-webkit-scrollbar-track {
-    background: #f1f1f1; 
+    background: rgba(0, 0, 0, 0.1); /* Πολύ ελαφρύ γκρι/διάφανο */
+    border-radius: 10px;
 }
 
 /* Η λαβή της μπάρας */

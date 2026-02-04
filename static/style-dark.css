@@ -64,10 +64,14 @@ h1, h2, h3 { color: #fff !important; }
 }
 .status-info, .last-update { color: #888 !important; }
 
-/* Scrollbar */
-::-webkit-scrollbar { width: 12px; }
-::-webkit-scrollbar-track { background: #000000; }
-::-webkit-scrollbar-thumb { background-color: #444; border-radius: 6px; border: 3px solid #121212; }
+::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.9); /* Πολύ ελαφρύ γκρι/διάφανο */
+    border-radius: 0px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #777; /* Ένα γκρι που ξεχωρίζει στο μαύρο, αλλά θυμίζει το light mode */
+}
 
 /* --- APEXCHARTS DARK MODE OVERRIDES --- */
 
