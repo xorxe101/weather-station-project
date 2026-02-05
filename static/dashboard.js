@@ -1956,3 +1956,18 @@ async function generateCustomCSV() {
         downloadBtn.style.opacity = '1';
     }
 }
+
+// --- MOBILE MENU TOGGLE ---
+function toggleHeaderMenu() {
+    const menu = document.getElementById('header-content-wrapper');
+    const btn = document.getElementById('mobile-menu-toggle');
+    
+    // Toggle class 'show' στο μενού
+    if (menu.classList.contains('show')) {
+        menu.classList.remove('show');
+        btn.classList.remove('open');
+    } else {
+        menu.classList.add('show');
+        btn.classList.add('open');
+    }
+}

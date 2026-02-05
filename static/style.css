@@ -225,86 +225,177 @@ h1 {
     }
 }
 
-/* 4. MOBILE LAYOUT (< 768px) */
+/* ========================================= */
+/* 4. MOBILE LAYOUT (< 768px) - GLOBAL CENTER */
+/* ========================================= */
 @media screen and (max-width: 768px) {
     
-    /* --- ΠΕΡΙΠΤΩΣΗ A: ΑΠΛΕΣ ΣΕΛΙΔΕΣ (Login, Signup, Moments) --- */
+    /* 1. ΒΑΣΙΚΟ CONTAINER HEADER (ΓΙΑ ΟΛΕΣ ΤΙΣ ΣΕΛΙΔΕΣ) */
     .dashboard-header {
-        display: flex;
-        flex-direction: row;
-        flex-wrap: wrap;           /* Επιτρέπει να πέσουν από κάτω αν στριμωχτούν */
-        
-        /* ΑΛΛΑΓΗ: Κεντράρισμα αντί για space-between */
-        justify-content: center;   
-        
-        align-items: center;
-        padding: 15px;
-        gap: 15px;                 /* Αυξάνουμε λίγο το κενό για να μην κολλάνε */
-        margin-bottom: 20px;
-        text-align: center;        /* Σιγουρεύουμε ότι το κείμενο μέσα είναι κεντραρισμένο */
-    }
-
-    /* Ρυθμίσεις Τίτλου */
-    .dashboard-header h1 {
-        font-size: 1.3rem;
-        margin: 0;
-        
-        /* Ευελιξία: Να πιάνει χώρο αλλά να μην ζορίζει την κατάσταση */
-        flex: 0 1 auto;
-        width: auto;
-        max-width: 100%;
-        text-align: center; /* Κεντράρισμα κειμένου τίτλου */
-    }
-    
-    /* Αν θέλεις το κουμπί να πιάνει όλο το πλάτος όταν πέφτει κάτω, ξε-σχολίασε το παρακάτω: */
-    /*
-    .dashboard-header > a, .dashboard-header > button {
-        flex: 1 0 auto; 
-    }
-    */
-
-    /* --- ΠΕΡΙΠΤΩΣΗ B: ΚΥΡΙΟ DASHBOARD (Εξαίρεση) --- */
-    /* Αν υπάρχει το .user-controls, τα βάζουμε όλα Κάθετα */
-    .dashboard-header:has(.user-controls) {
-        flex-direction: column;    
-        flex-wrap: nowrap;         
-        justify-content: center;
+        display: flex !important; /* Flex για απόλυτο έλεγχο */
+        flex-direction: column !important; /* Κάθετη στοίχιση */
+        align-items: center !important; /* Κεντράρισμα */
+        justify-content: center !important;
+        padding: 10px 10px !important;
+        height: auto !important;
+        border-radius: 20px !important;
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        width: auto !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
         text-align: center;
     }
 
-    /* Τίτλος Dashboard */
-    .dashboard-header:has(.user-controls) h1 {
-        width: 100%; /* Εδώ θέλουμε να πιάνει όλο το πλάτος */
-        text-align: center;
-        order: -2 !important;
-        margin-bottom: 10px;
-        flex: initial; /* Επαναφορά για να δουλέψει το width: 100% */
+    .dashboard-header.stuck {
+        border-radius: 0 0 25px 25px !important;
     }
 
-    /* Μπλε Κουτί */
-    .user-controls {
-        order: -1 !important;
-        width: 100% !important;
-        margin: 0 auto !important;
-        flex-wrap: wrap;
-        justify-content: center;
-        
-        background-color: rgba(21, 32, 43, 0.6);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 12px;
-        padding: 10px;
-    }
-    
-    /* Last Update */
-    .last-update, 
-    .dashboard-header .last-update {
-        order: 10 !important;
-        font-size: 0.75rem;
-        margin-top: 5px;
-        text-align: center;
+    /* 2. Η ΜΠΑΡΑ ΤΙΤΛΟΥ (Relative για να δουλέψει το Absolute) */
+    /* Ισχύει πλέον ΠΑΝΤΟΥ, αρκεί να υπάρχει το div "header-top-bar" */
+    .header-top-bar {
+        position: relative !important;
+        display: flex !important;
+        justify-content: center !important; /* Κεντράρισμα Τίτλου */
+        align-items: center !important;     
         width: 100%;
-        opacity: 0.8;
+        min-height: 40px; 
     }
+
+    /* 3. Ο ΤΙΤΛΟΣ (ΠΑΝΤΑ ΚΕΝΤΡΟ ΜΕ PADDING) */
+    .dashboard-header h1 {
+        text-align: center !important;
+        font-size: 1.3rem !important; 
+        margin: 0 !important;
+        line-height: 1.2;
+        width: 100%;
+        
+        /* Padding για να μην καβαλάει το κουμπί δεξιά (αν υπάρχει) */
+        padding: 0 50px !important; 
+        box-sizing: border-box;
+    }
+
+    /* 4. ΤΟ ΚΟΥΜΠΙ HAMBURGER (ΚΑΡΦΩΜΕΝΟ ΔΕΞΙΑ) */
+    #mobile-menu-toggle {
+        position: absolute !important;
+        right: 0 !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important; /* Κάθετο κεντράρισμα */
+        
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 6px;
+        width: 30px;
+        height: 30px;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        padding: 0;
+        z-index: 1001;
+        margin: 0 10px 0 0 !important;
+    }
+
+    #mobile-menu-toggle span {
+        display: block;
+        width: 100%;
+        height: 3px;
+        background-color: var(--primary-color);
+        border-radius: 3px;
+        transition: all 0.3s ease-in-out;
+        transform-origin: center;
+    }
+
+    /* Animation X */
+    #mobile-menu-toggle.open span:nth-child(1) { transform: translateY(9px) rotate(45deg); }
+    #mobile-menu-toggle.open span:nth-child(2) { opacity: 0; transform: scale(0); }
+    #mobile-menu-toggle.open span:nth-child(3) { transform: translateY(-9px) rotate(-45deg); }
+
+
+    /* --- ΥΠΟΛΟΙΠΟ MENU & ΚΟΥΜΠΙΑ --- */
+    
+    #header-content-wrapper {
+        display: none;
+        flex-direction: column;
+        gap: 15px;
+        padding-top: 15px;
+        width: 100%;
+        animation: slideDown 0.3s ease forwards;
+        border-top: 1px solid rgba(0,0,0,0.05);
+        margin-top: 10px;
+    }
+    #header-content-wrapper.show { display: flex; }
+    @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+    .user-controls {
+        flex-direction: column !important;
+        width: 100% !important;
+        background-color: rgba(21, 32, 43, 0.05) !important;
+        border: none !important;
+        padding: 15px 10px !important;
+        box-sizing: border-box !important;
+        border-radius: 12px;
+    }
+
+    .welcome-text { margin-bottom: 12px; display: block; text-align: center; width: 100%; }
+
+    /* Κουμπιά (Save Moment, Login κλπ) */
+    .dashboard-header .control-btn {
+        width: 100% !important;
+        margin: 5px 0 !important;
+        justify-content: center;
+        height: auto !important; 
+        min-height: 40px !important; 
+        white-space: normal !important;
+        text-align: center !important;
+        padding: 10px !important; 
+        display: flex !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Στυλ για τα απλά Link Buttons (Back to Dashboard) */
+    .dashboard-header > a {
+        width: 100% !important;
+        margin: 5px 0 !important;
+        justify-content: center;
+        height: auto !important;
+        min-height: 40px !important;
+        white-space: normal !important;
+        text-align: center !important;
+        padding: 10px !important;
+        display: flex !important;
+        box-sizing: border-box !important;
+        background-color: #fff;
+        border: 1px solid #ccc;
+        border-radius: 50px;
+        color: #333;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .dashboard-header .control-btn img { width: 18px !important; height: 18px !important; margin-right: 8px !important; flex-shrink: 0; }
+    .profile-img { width: 60px !important; height: 60px !important; margin-bottom: 10px; align-self: center; }
+    
+    .user-controls > a:first-child { display: flex; justify-content: center; width: 100% !important; margin-bottom: 5px; background: none !important; padding: 0 !important; min-height: auto !important; border: none !important;}
+
+    .status-info { text-align: center; font-size: 0.75rem; color: #666; padding-top: 10px; }
+
+    /* Κουμπιά εκτός Header */
+    .controls .control-btn {
+        width: auto !important;
+        margin: 5px !important;
+        padding: 8px 15px !important;
+        font-size: 0.85rem !important;
+        white-space: nowrap !important;
+    }
+}
+
+/* ΓΙΑ DESKTOP */
+@media screen and (min-width: 769px) {
+    #mobile-menu-toggle { display: none; }
+    #header-content-wrapper { display: contents; }
+    .header-top-bar { display: contents; }
 }
 
 .status-info {
@@ -458,34 +549,82 @@ h1 {
   font-size: 1rem;
 }
 
+/* ========================================= */
+/* 5. EXTRA SMALL SCREENS (< 480px)          */
+/* ========================================= */
 @media screen and (max-width: 480px) {
-  .user-controls {
-    flex-direction: column;
-    align-items: stretch;
-    padding: 15px;
-    width: 100%;
-    max-width: 100%;
-  }
 
-  .user-controls span {
-    text-align: center;
-    margin-bottom: 8px;
-    display: block;
-  }
+    /* --- 1. HEADER: Ακόμα πιο συμπαγές --- */
+    .dashboard-header {
+        padding: 10px 8px !important; /* Ελάχιστο padding πλάι */
+    }
 
-  .user-controls .control-btn {
-    width: 100%;
-    box-sizing: border-box;
-    margin: 5px 0;
-    text-align: center;
-    max-width: 100%;
-  }
-  
-  .status-info {
-    text-align: center !important;
-    width: 100%;
-    margin-top: 8px;
-  }
+    /* Μικραίνουμε τον τίτλο */
+    .dashboard-header h1 {
+        font-size: 1.1rem !important; /* Πιο μικρά γράμματα */
+    }
+
+    /* Μικραίνουμε το welcome message */
+    .welcome-text {
+        font-size: 0.9rem;
+    }
+
+    /* --- 2. ΚΟΥΜΠΙΑ ΜΕΝΟΥ --- */
+    /* Τα κάνουμε λίγο πιο κοντά σε ύψος */
+    .dashboard-header .control-btn, 
+    .dashboard-header a.control-btn,
+    .dashboard-header:not(.home-header) a {
+        min-height: 38px !important;
+        padding: 8px !important;
+        font-size: 0.9rem !important;
+    }
+
+    /* --- 3. ΚΟΥΜΠΙΑ ΕΛΕΓΧΟΥ (Refresh, Time Range) --- */
+    /* Εδώ κάνουμε τη μεγάλη αλλαγή: Πλέγμα 2 στηλών */
+    .controls {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important; /* 2 κουμπιά ανά σειρά */
+        gap: 8px !important;
+        justify-content: stretch;
+    }
+
+    .controls .control-btn {
+        width: 100% !important; /* Να πιάνει όλο το κουτάκι του grid */
+        margin: 0 !important;
+        font-size: 0.8rem !important; /* Μικρά γράμματα για να χωράνε */
+        padding: 8px 4px !important;
+        white-space: normal !important; /* Επιτρέπουμε αλλαγή γραμμής (π.χ. Last \n Hour) */
+        line-height: 1.1;
+        height: 100%; /* Ίδιο ύψος όλα */
+        min-height: 40px; /* Ελάχιστο ύψος για δάχτυλο */
+    }
+
+    /* --- 4. CURRENT WEATHER BOXES (Τα χρωματιστά κουτάκια) --- */
+    /* Μικραίνουμε τα τεράστια νούμερα */
+    .weather-value {
+        font-size: 1.4rem !important;
+    }
+    
+    .weather-label {
+        font-size: 0.75rem !important;
+    }
+
+    /* --- 5. ΓΡΑΦΗΜΑΤΑ --- */
+    /* Μειώνουμε το ύψος για να μην πιάνουν όλη την οθόνη */
+    .chart-container, .chart-card {
+        min-height: 250px !important; /* Από 300+ που ήταν */
+        height: auto !important;
+    }
+
+    /* --- 6. MODALS (Export etc) --- */
+    .modal-box {
+        width: 95% !important;
+        padding: 15px !important;
+    }
+    
+    .export-grid {
+        grid-template-columns: 1fr !important; /* Μία στήλη στα κουμπιά export */
+    }
 }
 
 .last-update {

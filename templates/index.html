@@ -5,9 +5,12 @@
   <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
   <link rel="icon" href="{{ url_for('static', filename='img_icon/dashboard.ico') }}">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=13">
+  
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=15">
+  
   <style>
     .weather-value.no-data { color: #999; font-style: italic; }
+    /* Fallback style */
     .user-controls {
       display: flex;
       gap: 10px;
@@ -20,46 +23,61 @@
 </head>
 <body>
   <div id="sentinel"></div>
+  
   <div class="dashboard-header">
-    <h1>Weather Dashboard<br>of Vyronas</h1>
     
-    <div class="user-controls">
-        {% if current_user.is_authenticated %}
-            <a href="/profile" title="Go to Profile & Settings">
-                <img src="{{ url_for('static', filename='img_icon/user.png') }}" 
-                     alt="Profile"
-                     style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid #0066cc; object-fit: cover; cursor: pointer; transition: transform 0.2s;">
-            </a>
-            
-            <span>Welcome <strong>{{ current_user.username }}</strong></span>
-            <button class="control-btn" onclick="saveCurrentMoment()" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
-                <img src="{{ url_for('static', filename='img_icon/save.png') }}" 
-                    alt="Save" 
-                    style="width: 20px; height: 20px;">
-                Save Moment
-            </button>
-            <a href="/my_moments" class="control-btn">My Moments</a>
-
-        {% else %}
-            <span>Welcome <strong>Guest</strong></span>
-            
-            <button class="control-btn" onclick="saveCurrentMoment()" 
-                    title="🔒 Requires Account"
-                    style="display: flex; align-items: center; justify-content: center; gap: 8px; 
-                           opacity: 0.6; cursor: not-allowed; filter: grayscale(100%);">
-                <img src="{{ url_for('static', filename='img_icon/save.png') }}" 
-                     alt="Save" 
-                     style="width: 20px; height: 20px;">
-                Save Moment
-            </button>
-
-            <a href="/login" class="control-btn">Login</a>
-            <a href="/signup" class="control-btn">Sign Up</a>
-        {% endif %}
+    <div class="header-top-bar">
+        <h1>Weather Dashboard<br>of Vyronas</h1>
+        
+        <button id="mobile-menu-toggle" onclick="toggleHeaderMenu()">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
     </div>
-    <div class="status-info">
-      <div>Auto-refresh: <span id="refreshStatus">Enabled</span></div>
-      <div>Last update: <span id="lastUpdate">-</span></div>
+    
+    <div id="header-content-wrapper">
+        <div class="user-controls">
+            {% if current_user.is_authenticated %}
+                <a href="/profile" title="Go to Profile & Settings">
+                    <img src="{{ url_for('static', filename='img_icon/user.png') }}" 
+                         alt="Profile"
+                         class="profile-img"
+                         style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid #0066cc; object-fit: cover; cursor: pointer; transition: transform 0.2s;">
+                </a>
+                
+                <span class="welcome-text">Welcome <strong>{{ current_user.username }}</strong></span>
+                
+                <button class="control-btn" onclick="saveCurrentMoment()" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    <img src="{{ url_for('static', filename='img_icon/save.png') }}" 
+                        alt="Save" 
+                        style="width: 20px; height: 20px;">
+                    Save Moment
+                </button>
+                <a href="/my_moments" class="control-btn">My Moments</a>
+
+            {% else %}
+                <span class="welcome-text">Welcome <strong>Guest</strong></span>
+                
+                <button class="control-btn" onclick="saveCurrentMoment()" 
+                        title="🔒 Requires Account"
+                        style="display: flex; align-items: center; justify-content: center; gap: 8px; 
+                               opacity: 0.6; cursor: not-allowed; filter: grayscale(100%);">
+                    <img src="{{ url_for('static', filename='img_icon/save.png') }}" 
+                         alt="Save" 
+                         style="width: 20px; height: 20px;">
+                    Save Moment
+                </button>
+
+                <a href="/login" class="control-btn">Login</a>
+                <a href="/signup" class="control-btn">Sign Up</a>
+            {% endif %}
+        </div>
+
+        <div class="status-info">
+          <div>Auto-refresh: <span id="refreshStatus">Enabled</span></div>
+          <div>Last update: <span id="lastUpdate">-</span></div>
+        </div>
     </div>
   </div>
 
@@ -95,12 +113,10 @@
   </button>
   <script>
       // --- STICKY HEADER DETECTION ---
-      // Παρακολουθεί τον "sentinel". Όταν αυτός βγει από την οθόνη, σημαίνει ότι το Header κόλλησε πάνω.
       const sentinel = document.getElementById('sentinel');
       const header = document.querySelector('.dashboard-header');
 
       const observer = new IntersectionObserver((entries) => {
-          // Αν ο sentinel ΔΕΝ φαίνεται (isIntersecting = false), βάλε την κλάση 'stuck'
           if (!entries[0].isIntersecting) {
               header.classList.add('stuck');
           } else {
