@@ -417,17 +417,14 @@ body {
 
 /* Dark Mode Adjustments */
 .compass-dial {
-    border-color: #555; background: rgba(40, 40, 40, 0.5);
+    background: rgba(255, 255, 255, 0.05);
+    border-color: #555;
 }
-.compass-label { color: #aaa; }
-.label-n { color: #ddd; }
-
-/* Dark Mode */
 .compass-tick::after {
     background: #555;
 }
-.compass-tick.major::after {
-    background: #777;
+.compass-label {
+    color: #aaa;
 }
 
 /* Dark Mode */
@@ -436,8 +433,8 @@ body {
 
 /* Dark Mode Adjustment */
 .humidity-widget {
-    /* Στο dark mode, το "άδειο" μέρος να είναι πιο σκούρο */
-    --empty-color: #444; 
+    background: #2b2b2b;
+    border-color: #444;
 }
 
 /* Dark Mode για το χώμα */
@@ -452,15 +449,13 @@ body {
     );
 }
 
-/* --- DARK MODE FIXES --- */
+/* --- DARK MODE FIX (Προαιρετικό, για να φαίνεται το περίγραμμα στο μαύρο) --- */
 .gauge-widget {
-    background: rgba(40, 40, 40, 0.5); 
-    border-color: #555; /* Το περίγραμμα γίνεται σκούρο γκρι */
-    box-shadow: inset 0 2px 5px rgba(0,0,0,0.3);
+    background: rgba(255, 255, 255, 0.05);
+    border-color: #555;
 }
-
 .gauge-pivot {
-    border-color: #333; /* Το περίγραμμα της βίδας προσαρμόζεται στο dark mode */
+    border-color: #333;
 }
 
 /* Dark Mode */
@@ -474,8 +469,11 @@ body {
     background: #50aaff;
 }
 
-/* Dark Mode */
+/* Dark Mode Fix */
 .pressure-widget {
     border-color: #555;
-    background: rgba(40, 40, 40, 0.5);
+    background: rgba(255, 255, 255, 0.05);
+}
+.pressure-widget::before {
+    color: #666;
 }

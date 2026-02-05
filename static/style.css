@@ -1316,7 +1316,7 @@ button:focus, a:focus, input:focus, textarea:focus {
 .compass-label {
     position: absolute; font-size: 9px; font-weight: bold; color: #888;
 }
-.label-n { top: 7px; left: 50%; transform: translateX(-50%); color: #555; } /* Το Βορράς λίγο πιο έντονο */
+.label-n { top: 7px; left: 50%; transform: translateX(-50%); color: #555; }
 .label-s { bottom: 7px; left: 50%; transform: translateX(-50%); }
 .label-e { right: 8px; top: 50%; transform: translateY(-50%); }
 .label-w { left: 8px; top: 50%; transform: translateY(-50%); }
@@ -1325,25 +1325,29 @@ button:focus, a:focus, input:focus, textarea:focus {
 .compass-needle {
     position: absolute;
     left: 50%; bottom: 50%; /* Η βάση της στο κέντρο */
-    width: 2px;            /* Πάχος */
-    height: 20%;           /* Μήκος του μπροστινού μέρους */
-    background: #ff3333;   /* Έντονο Κόκκινο */
+    width: 2px;             /* Πάχος */
+    height: 20%;            /* Μήκος του μπροστινού μέρους */
+    background: #ff3333;    /* Έντονο Κόκκινο */
     margin-left: -1px;
+    
     transform-origin: bottom center; /* Περιστροφή γύρω από το κέντρο */
-    transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+    
+    /* --- ANIMATION FIX: Χρήση της μεταβλητής --- */
+    transform: rotate(var(--rotation));
+    animation: compass-sweep 1.5s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+    
     z-index: 2;
 }
 
-/* --- ΝΕΟ: Το πίσω μέρος της βελόνας (η προέκταση) --- */
+/* --- Το πίσω μέρος της βελόνας (η προέκταση) --- */
 .compass-needle::before {
     content: '';
     position: absolute;
-    top: 100%; /* Ξεκινάει ακριβώς εκεί που τελειώνει η βάση της κύριας βελόνας (στο κέντρο) */
+    top: 100%; /* Ξεκινάει ακριβώς εκεί που τελειώνει η βάση */
     left: 0;
     width: 2px;   /* Το ίδιο πάχος */
-    height: 140%; /* Το ίδιο μήκος προς την αντίθετη κατεύθυνση (κληρονομεί το 40% του γονέα) */
-    background: #ff3333; /* Το ίδιο κόκκινο χρώμα για ενιαία εμφάνιση */
-    /* ΣΗΜΕΙΩΣΗ: Αν θέλεις η ουρά να είναι γκρι (όπως σε πολλές πυξίδες), άλλαξε το σε: background: #888; */
+    height: 140%; /* Το ίδιο μήκος προς την αντίθετη κατεύθυνση */
+    background: #ff3333; 
 }
 
 /* Η μύτη του βέλους (φτιαγμένη με CSS τρίγωνο) */
@@ -1363,7 +1367,7 @@ button:focus, a:focus, input:focus, textarea:focus {
     border-radius: 50%; margin: -3px 0 0 -3px; z-index: 3;
 }
 
-/* --- ΝΕΟ: Γραμμές Πυξίδας (Ticks) --- */
+/* --- Γραμμές Πυξίδας (Ticks) --- */
 .compass-tick {
     position: absolute;
     left: 50%; 
@@ -1391,6 +1395,12 @@ button:focus, a:focus, input:focus, textarea:focus {
     background: #999;
     width: 2px;
     margin-left: -0.5px;
+}
+
+/* --- ANIMATION KEYFRAMES --- */
+@keyframes compass-sweep {
+    from { transform: rotate(0deg); } /* Ξεκινάει πάντα από Βορρά */
+    /* Καταλήγει στο var(--rotation) που ορίσαμε */
 }
 
 /* --- CUSTOM THERMOMETER STYLES --- */
@@ -1426,6 +1436,7 @@ button:focus, a:focus, input:focus, textarea:focus {
     border-radius: 50%;
     z-index: 2;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    animation: temp-pulse 3s infinite ease-in-out;
 }
 
 /* Το κινούμενο υγρό μέσα στο σωλήνα */
@@ -1436,7 +1447,9 @@ button:focus, a:focus, input:focus, textarea:focus {
     width: 100%; /* Πιάνει όλο το πλάτος του σωλήνα */
     background: #ff3333;
     border-radius: 10px 10px 0 0;
-    transition: height 0.8s cubic-bezier(0.4, 0, 0.2, 1); /* Ομαλή κίνηση */
+    transition: height 1.5s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.5s ease;
+    transform-origin: bottom; /* Λέμε να μεγαλώνει από τη βάση προς τα πάνω */
+    animation: fill-up 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards; /* Εκτελείται μόλις φορτώσει */
 }
 
 /* Γραμμές μέτρησης (Ticks) δίπλα στο θερμόμετρο */
@@ -1488,16 +1501,81 @@ button:focus, a:focus, input:focus, textarea:focus {
     box-shadow: 0 0 10px rgba(255, 69, 96, 0.2);
 }
 
+/* --- THERMOMETER ANIMATION KEYFRAMES --- */
+@keyframes temp-pulse {
+    0% {
+        transform: scale(1);
+        filter: brightness(1);
+    }
+    50% {
+        transform: scale(1.15); /* Μεγαλώνει λίγο η μπάλα */
+        filter: brightness(1.1); /* Λάμπει λίγο περισσότερο */
+    }
+    100% {
+        transform: scale(1);
+        filter: brightness(1);
+    }
+}
+
+/* Animation για να γεμίζει ο υδράργυρος από κάτω προς τα πάνω */
+@keyframes fill-up {
+    from { transform: scaleY(0); }
+    to   { transform: scaleY(1); }
+}
+
 /* --- HUMIDITY DROP STYLES --- */
 
+/* 1. Η Μάσκα της Σταγόνας */
 .humidity-widget {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 60px; /* Ύψος του widget */
-    width: 100%;
-    color: #e0e0e0; /* Default χρώμα (γκρι) για το άδειο μέρος */
-    transition: color 0.5s ease;
+    position: relative;
+    width: 40px;
+    height: 40px;
+    margin: 10px auto;
+    background: #f4f7f6;
+    border: 2px solid #e0e0e0;
+    
+    /* Σχήμα Σταγόνας */
+    border-radius: 0 50% 50% 50%; 
+    transform: rotate(45deg); /* Περιστροφή για να στέκεται όρθια */
+    
+    overflow: hidden; /* Κόβουμε ό,τι περισσεύει απ' έξω */
+    box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
+
+    /* Το animation της σταγόνας που αναπνέει */
+    animation: drop-pulse 3s infinite ease-in-out;
+}
+
+/* 2. Το Νερό (Διορθωμένο) */
+.humidity-fill {
+    position: absolute;
+    /* Κεντράρισμα και Μεγέθυνση: 
+       Το κάνουμε 142% (ρίζα του 2) για να καλύπτει ακριβώς τη διαγώνιο */
+    width: 142%;
+    height: 142%;
+    top: -21%;  /* (100 - 142) / 2 */
+    left: -21%;
+    
+    /* ΑΝΤΙ-ΠΕΡΙΣΤΡΟΦΗ: Το γυρνάμε ανάποδα για να ισιώσει η στάθμη του νερού */
+    transform: rotate(-45deg);
+    
+    /* Το χρώμα του νερού */
+    background: linear-gradient(to top, #4facfe 0%, #00f2fe 100%);
+    
+    /* ΕΛΕΓΧΟΣ ΥΨΟΥΣ: Χρησιμοποιούμε τη μεταβλητή από το JS */
+    background-size: 100% var(--val);
+    background-repeat: no-repeat;
+    background-position: bottom; /* Γεμίζει από κάτω προς τα πάνω (κάθετα πλέον!) */
+    
+    /* Animation για ομαλή αλλαγή όταν έρχονται νέα δεδομένα */
+    transition: background-size 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    /* Αρχικό γέμισμα (μόλις φορτώσει) */
+    animation: fill-water-level 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Το animation για να γεμίζει από το 0 στην αρχή */
+@keyframes fill-water-level {
+    from { background-size: 100% 0%; }
 }
 
 /* Το εικονίδιο SVG */
@@ -1518,6 +1596,28 @@ button:focus, a:focus, input:focus, textarea:focus {
 
 /* 3. Υγρό / Βροχερό (> 70%) -> Μπλε */
 .humidity-widget.val-cold { color: #3399ff; }
+
+/* ========================================= */
+/* ΕΙΔΙΚΟ ANIMATION ΓΙΑ ΤΗ ΣΤΑΓΟΝΑ       */
+/* ========================================= */
+@keyframes drop-pulse {
+    0% {
+        /* Κρατάμε την περιστροφή ΚΑΙ το αρχικό μέγεθος */
+        transform: rotate(45deg) scale(1);
+        box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
+    }
+    50% {
+        /* Κρατάμε την περιστροφή ΚΑΙ μεγαλώνουμε λίγο */
+        transform: rotate(45deg) scale(1.1); 
+        /* Προσθέτουμε μια ωραία μπλε λάμψη */
+        box-shadow: inset 0 2px 10px rgba(79, 172, 254, 0.05), 0 0 15px rgba(79, 172, 254, 0.05);
+    }
+    100% {
+        /* Επιστροφή στην αρχική κατάσταση */
+        transform: rotate(45deg) scale(1);
+        box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
+    }
+}
 
 /* --- GROUND TEMP WIDGET STYLES --- */
 
@@ -1559,13 +1659,12 @@ button:focus, a:focus, input:focus, textarea:focus {
     height: 40px;
     
     /* LIGHT MODE */
-    background: rgba(255, 255, 255, 0.1); /* Διάφανο φόντο */
-    border: 2px solid #d0d0d0;             /* Περίγραμμα ΠΑΝΤΟΥ (και κάτω) */
-    /* Αφαιρέθηκε το border-bottom: none */
+    background: rgba(255, 255, 255, 0.5); /* Λίγο πιο έντονο για να φαίνεται */
+    border: 2px solid #d0d0d0;
     
-    border-radius: 50px 50px 0 0;          /* Σχήμα ημικύκλιο */
+    border-radius: 50px 50px 0 0; /* Σχήμα ημικύκλιο */
     margin: 10px auto 5px auto;
-    overflow: hidden;                      /* Κρύβει ό,τι εξέχει */
+    overflow: hidden;
     box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
 }
 
@@ -1576,46 +1675,55 @@ button:focus, a:focus, input:focus, textarea:focus {
     left: 50%;
     width: 4px;
     height: 35px;
-    /* Default χρώμα (αν δεν υπάρχει ένδειξη): Σκούρο Γκρι */
     background: #555; 
     margin-left: -2px;
     transform-origin: bottom center;
-    transform: rotate(-90deg);
-    transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1), background 0.5s ease;
+    
+    /* --- ΑΛΛΑΓΗ 1: Χρήση της μεταβλητής --- */
+    transform: rotate(var(--rotation)); 
+    
     z-index: 2;
-    border-radius: 2px 2px 0 0; /* Στρογγυλεμένη μύτη */
+    border-radius: 2px 2px 0 0;
+
+    /* --- ΑΛΛΑΓΗ 2: Το Animation "Σκουπίσματος" --- */
+    /* Ξεκινάει από -90 και πάει στη θέση του (--rotation) μέσα σε 1.5 δευτερόλεπτο */
+    animation: gauge-sweep 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
-/* Η βίδα στο κέντρο (θα παίρνει κι αυτή χρώμα) */
+/* Η βίδα στο κέντρο */
 .gauge-pivot {
     position: absolute;
     bottom: -5px;
     left: 50%;
-    width: 12px; /* Λίγο μεγαλύτερη για στυλ */
+    width: 12px;
     height: 12px;
-    background: #555; /* Default χρώμα */
+    background: #555;
     border-radius: 50%;
     margin-left: -6px;
     z-index: 3;
-    border: 2px solid #fff; /* Λευκό περίγραμμα για να ξεχωρίζει */
+    border: 2px solid #fff;
     transition: background 0.5s ease;
 }
 
-/* --- ΔΥΝΑΜΙΚΑ ΧΡΩΜΑΤΑ (Βάφουν ΒΕΛΟΝΑ και ΒΙΔΑ) --- */
-
-/* 1. Πράσινο (Άπνοια) */
+/* --- ΧΡΩΜΑΤΑ (Όπως τα έστειλες) --- */
 .gauge-widget.val-optimal .gauge-needle,
 .gauge-widget.val-optimal .gauge-pivot { background: #28a745; }
 
-/* 2. Πορτοκαλί (Αέρας) */
 .gauge-widget.val-caution .gauge-needle,
 .gauge-widget.val-caution .gauge-pivot { background: #ff9800; }
 
-/* 3. Κόκκινο (Θύελλα) */
 .gauge-widget.val-danger .gauge-needle,
 .gauge-widget.val-danger .gauge-pivot,
 .gauge-widget.val-extreme .gauge-needle,
 .gauge-widget.val-extreme .gauge-pivot { background: #ff4560; }
+
+/* Animation για τη βελόνα του ανέμου */
+@keyframes gauge-sweep {
+    from {
+        transform: rotate(-90deg); /* Ξεκινάει πάντα από το 0 (τέρμα αριστερά) */
+    }
+    /* Δεν βάζουμε 'to', γιατί το 'to' είναι η τιμή που δώσαμε στο style (var(--rotation)) */
+}
 
 /* --- RAINFALL GAUGE STYLES --- */
 
@@ -1644,8 +1752,16 @@ button:focus, a:focus, input:focus, textarea:focus {
     bottom: 0;
     width: 100%;
     background: #3399ff; /* Μπλε του νερού */
-    transition: height 1s ease-out; /* Ομαλό γέμισμα */
+    
+    /* Διατηρούμε το transition για ζωντανές αλλαγές */
+    transition: height 1s ease-out; 
+    
     box-shadow: inset 0 2px 5px rgba(255,255,255,0.3);
+
+    /* --- ΠΡΟΣΘΗΚΗ ANIMATION --- */
+    transform-origin: bottom; /* Να μεγαλώνει από κάτω προς τα πάνω */
+    /* Χρησιμοποιούμε το ίδιο 'fill-up' που φτιάξαμε για το θερμόμετρο/υγρασία */
+    animation: fill-up 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 /* Γραμμές μέτρησης πάνω στο γυαλί */
@@ -1733,20 +1849,40 @@ button:focus, a:focus, input:focus, textarea:focus {
     width: 10px;
     height: 10px;
     background: #3399ff; /* Μπλε χρώμα δρόσου */
-    border-radius: 0 50% 50% 50%;
-    transform: rotate(45deg);
+    border-radius: 0 50% 50% 50%; /* Σχήμα σταγόνας */
+    
+    /* ΘΕΣΗ: */
     left: 50%;
-    margin-left: -5px;
-    bottom: var(--drop-position); /* Θα ελέγχεται από τη JS */
-    transition: bottom 0.8s ease-out;
+    margin-left: -5px; /* Κεντράρισμα */
+    
+    /* Η τελική θέση ορίζεται από τη JS, αλλά το animation ξεκινάει από κάτω */
+    bottom: var(--drop-position); 
+    
     z-index: 3;
     box-shadow: 0 0 5px rgba(51, 153, 255, 0.2);
-    animation: drip 2s ease-in-out infinite;
+
+    /* --- ΤΟ ΚΛΕΙΔΙ ΤΗΣ ΚΙΝΗΣΗΣ --- */
+    /* Συνδυάζουμε 2 Animations:
+       1. drop-rise: Ανεβαίνει από τη βάση (1.5s - ίδιος χρόνος με το θερμόμετρο)
+       2. drip: Πάλλεται (συνεχόμενα) */
+    animation: 
+        drop-rise 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards, 
+        drip 2s ease-in-out infinite;
 }
 
+/* 1. Animation για τον Παλμό (Υπάρχει ήδη) */
 @keyframes drip {
     0%, 100% { transform: rotate(45deg) scale(1); }
-    50% { transform: rotate(45deg) scale(1.1); }
+    50% { transform: rotate(45deg) scale(1.2); }
+}
+
+/* 2. Animation για το Ανέβασμα (ΝΕΟ) */
+@keyframes drop-rise {
+    from {
+        /* Ξεκινάει από το ύψος της βάσης του θερμόμετρου (περίπου 15px) */
+        bottom: 15px; 
+    }
+    /* Δεν βάζουμε 'to', γιατί το 'to' είναι το var(--drop-position) που έχει ήδη */
 }
 
 /* --- PRESSURE BAROMETER STYLES --- */
@@ -1774,8 +1910,19 @@ button:focus, a:focus, input:focus, textarea:focus {
     bottom: 50%; /* Η βάση της είναι στο κέντρο */
     left: 50%;
     margin-left: -1px;
+    
     transform-origin: bottom center;
+    
+    /* --- 1. ΣΥΝΔΕΣΗ ΜΕ ΤΗ ΜΕΤΑΒΛΗΤΗ --- */
+    transform: rotate(var(--rotation));
+    
+    /* --- 2. ΤΟ ANIMATION --- */
+    /* Ξεκινάει από το "Low" και πάει στη θέση του με ελαστικότητα */
+    animation: pressure-sweep 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    
+    /* Κρατάμε και το transition για μελλοντικές αλλαγές */
     transition: transform 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    
     z-index: 5;
 }
 
@@ -1799,4 +1946,13 @@ button:focus, a:focus, input:focus, textarea:focus {
     font-weight: bold;
     color: #c0c0c0;
     letter-spacing: 2px;
+}
+
+/* --- KEYFRAMES ΓΙΑ ΤΟ ANIMATION --- */
+@keyframes pressure-sweep {
+    from {
+        /* Ξεκινάει από το 950hPa (τέρμα αριστερά) */
+        transform: rotate(-120deg); 
+    }
+    /* Καταλήγει στο var(--rotation) που ορίσαμε */
 }

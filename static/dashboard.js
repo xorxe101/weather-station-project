@@ -521,7 +521,7 @@ function updateDisplay(latest, history) {
         </div>
         ${createWeatherBox('Air Temp', getValue(latest, 'Air Temperature'), '°C')}
         ${createWeatherBox('Ground Temp', getValue(latest, 'Soil Temperature'), '°C')}
-        ${createWeatherBox('Humidity', getValue(latest, 'Humidity'), '%')}
+        ${createHumidityDropBox(getValue(latest, 'Humidity'))}
         ${createWeatherBox('Wind Speed', getValue(latest, 'WindSpeed'), ' km/h')}
         ${createWindCompassBox(getValue(latest, 'WindDirection'))}
         ${createWeatherBox('Rainfall', getValue(latest, 'RainFall'), 'mm')}
@@ -903,6 +903,7 @@ function createWeatherBox(label, value, unit) {
         let safeValue = Math.max(minP, Math.min(maxP, value || 1013));
         
         // Υπολογισμός γωνίας: 950 -> -120deg, 1050 -> 120deg
+        // (Το εύρος είναι 240 μοίρες συνολικά)
         let rotation = ((safeValue - minP) / (maxP - minP)) * 240 - 120;
 
         return `
@@ -910,7 +911,7 @@ function createWeatherBox(label, value, unit) {
             <div class="weather-label">${label}</div>
             
             <div class="pressure-widget">
-                <div class="pressure-needle" style="transform: rotate(${rotation}deg);"></div>
+                <div class="pressure-needle" style="--rotation: ${rotation}deg;"></div>
                 <div class="pressure-center"></div>
             </div>
 
@@ -931,7 +932,7 @@ function createWeatherBox(label, value, unit) {
 // --- NEW: Custom Wind Compass Box (Pro Version + Ticks) ---
 function createWindCompassBox(value) {
     let displayValue = value;
-    let rotation = 0;
+    let rotation = 0; // Αρχική θέση (0° = Βορράς)
     
     if (value === null || value === undefined || isNaN(value)) {
         displayValue = '--';
@@ -962,12 +963,41 @@ function createWindCompassBox(value) {
                 <span class="compass-label label-s">S</span>
                 <span class="compass-label label-w">W</span>
                 
-                <div class="compass-needle" style="transform: rotate(${rotation}deg);"></div>
+                <div class="compass-needle" style="--rotation: ${rotation}deg;"></div>
                 <div class="compass-pivot"></div>
             </div>
             
             <div class="weather-value">${displayValue}°</div>
         </div>
+    </div>
+    `;
+}
+
+// --- NEW: Custom Humidity Drop Box ---
+function createHumidityDropBox(value) {
+    let displayValue = value;
+    let percent = value;
+    let colorClass = '';
+
+    if (value === null || value === undefined || isNaN(value)) {
+        displayValue = '--';
+        percent = 0;
+    } else {
+        colorClass = getColorClass('Humidity', value);
+        // Ασφάλεια ορίων
+        if (percent > 100) percent = 100;
+        if (percent < 0) percent = 0;
+    }
+
+    return `
+    <div class="weather-box">
+        <div class="weather-label">Humidity</div>
+        
+        <div class="humidity-widget">
+            <div class="humidity-fill" style="--val: ${percent}%;"></div>
+        </div>
+        
+        <div class="weather-value ${colorClass}">${displayValue}%</div>
     </div>
     `;
 }
