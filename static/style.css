@@ -57,10 +57,10 @@ h1 {
 /* 1. ΓΕΝΙΚΗ ΔΙΑΤΑΞΗ & DESIGN (DESKTOP > 1024px) */
 .dashboard-header {
     /* Διάταξη: 3 Μέρη (Αριστερά - Κέντρο - Δεξιά) */
-    display: grid;
-    grid-template-columns: 1fr auto 1fr; 
-    align-items: center;
-    gap: 15px;
+    display: flex !important;
+    flex-direction: row !important; /* Όλα σε μια σειρά */
+    justify-content: space-between !important;
+    align-items: center !important;
     
     /* ΕΝΕΡΓΟΠΟΙΗΣΗ STICKY */
     position: -webkit-sticky; /* Για Safari */
@@ -70,7 +70,9 @@ h1 {
     
     /* Design & Χρώματα (Επαναφορά) */
     background-color: var(--background-color); /* Κρατάμε το φόντο για να μην είναι διάφανο */
-    padding: 10px 20px;
+    padding: 5px 25px !important;  /* Ελάχιστο padding πάνω-κάτω (5px) */
+    min-height: 90px !important;
+    height: 90px !important; /* Το ύψος που ήθελες */
     box-shadow: 0 4px 12px rgba(0,0,0,0.15); /* Η σκιά που ήθελες */
     border-radius: 20px;
 
@@ -79,6 +81,15 @@ h1 {
     
     /* ΣΗΜΑΝΤΙΚΟ: Αποφυγή επικάλυψης με τα από κάτω κουμπιά */
     margin-bottom: 20px; 
+}
+
+.dashboard-header h1 {
+    font-size: 1.5rem !important; /* Πιο διακριτικός τίτλος */
+    text-align: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    white-space: nowrap !important; /* Να μην αλλάζει γραμμή */
+    flex: 0 1 auto; /* Να πιάνει μόνο όσο χώρο χρειάζεται */
 }
 
 /* Όταν ενεργοποιείται η κλάση .stuck (από το Javascript) */
@@ -139,9 +150,9 @@ h1 {
     white-space: nowrap;
 }
 
-/* ========================================= */
-/* 4. MOBILE LAYOUT (< 768px) - GLOBAL CENTER */
-/* ========================================= */
+/* =========================================== */
+/* 4. MOBILE LAYOUT (< 1024px) - GLOBAL CENTER */
+/* =========================================== */
 @media screen and (max-width: 1024px) {
     
     /* 1. ΒΑΣΙΚΟ CONTAINER HEADER (ΓΙΑ ΟΛΕΣ ΤΙΣ ΣΕΛΙΔΕΣ) */
