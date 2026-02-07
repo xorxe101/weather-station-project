@@ -1,6 +1,7 @@
 // dashboard.js
 // Global variables
 let charts = {};
+let fetchController = null; // <--- ΠΡΟΣΘΗΚΗ: ΓΙΑ ΤΗΝ ΑΚΥΡΩΣΗ ΑΙΤΗΜΑΤΩΝ
 let autoRefresh = true;
 let currentTimeRange = 24; // hours
 let refreshInterval;
@@ -275,6 +276,17 @@ function toggleAutoRefresh() {
 
 function changeTimeRange(hours) {
     currentTimeRange = hours;
+    
+    // Οπτικό Feedback ΑΜΕΣΩΣ: Καθαρισμός όλων πριν ξεκινήσει το request
+    Object.keys(charts).forEach(id => {
+        if(charts[id]) {
+            charts[id].destroy();
+            delete charts[id];
+        }
+        const el = document.getElementById(id);
+        if(el) el.innerHTML = '<div class="skeleton skeleton-chart"></div>';
+    });
+    
     loadData();
 }
 
@@ -416,7 +428,13 @@ function addCustomExportButtons() {
 
 async function loadData(isBackgroundUpdate = false) {
     try {
-        // --- SILENT REFRESH FIX ---
+        // 1. ΑΚΥΡΩΣΗ ΠΡΟΗΓΟΥΜΕΝΟΥ ΑΙΤΗΜΑΤΟΣ (Fix για το γρήγορο κλικ)
+        if (fetchController) {
+            fetchController.abort();
+        }
+        fetchController = new AbortController();
+        const signal = fetchController.signal;
+
         if (!isBackgroundUpdate) {
             document.body.classList.add('loading');
             renderSkeleton();
@@ -424,14 +442,16 @@ async function loadData(isBackgroundUpdate = false) {
         
         console.log('Loading data for', currentTimeRange, 'hours...');
         
+        // Προσθήκη timestamp για να μην κολλάει η cache
+        const timestamp = new Date().getTime();
+
         const [latestRes, historyRes] = await Promise.all([
-            fetch('/api/latest'),
-            fetch(`/api/history/last/${currentTimeRange}hours`)
+            fetch(`/api/latest?t=${timestamp}`, { signal }),
+            fetch(`/api/history/last/${currentTimeRange}hours?t=${timestamp}`, { signal })
         ]);
 
         if (!latestRes.ok || !historyRes.ok) throw new Error('API request failed');
 
-        // --- Η ΜΑΓΕΙΑ ΕΔΩ: Παίρνουμε την ώρα του Server ---
         const serverDateStr = latestRes.headers.get('Date');
         if (serverDateStr) {
             const serverTime = new Date(serverDateStr).getTime();
@@ -461,6 +481,10 @@ async function loadData(isBackgroundUpdate = false) {
         }
 
     } catch (error) {
+        if (error.name === 'AbortError') {
+            console.log('✋ Previous request cancelled (User clicked fast)');
+            return; // Αγνόησε το error, είναι ηθελημένο
+        }
         console.error('Error loading data:', error);
         if (!isBackgroundUpdate) {
              const latestEl = document.getElementById('latest');
@@ -1012,6 +1036,7 @@ function createChart(elementId, title, series, colors, config = commonChartConfi
     // Clear previous chart
     if (charts[elementId]) {
         charts[elementId].destroy();
+        delete charts[elementId];
     }
     
     element.innerHTML = '';
@@ -1022,55 +1047,58 @@ function createChart(elementId, title, series, colors, config = commonChartConfi
     const gridColor = isDark ? '#404040' : '#f0f0f0';
     const tooltipTheme = isDark ? 'dark' : 'light';
     
-    try {
-        const chart = new ApexCharts(element, {
-            ...config,
-            ...commonAxisConfig,
-            series: series,
-            colors: colors,
-            title: {
-                text: title,
-                align: 'left',
-                style: {
-                    fontSize: window.innerWidth <= 768 ? '16px' : '14px',
-                    fontWeight: 'bold',
-                    color: textColor
+    // 2. DELAY ΓΙΑ ΝΑ ΠΡΟΛΑΒΕΙ ΝΑ ΚΑΘΑΡΙΣΕΙ ΤΟ DOM
+    setTimeout(() => {
+        try {
+            const chart = new ApexCharts(element, {
+                ...config,
+                ...commonAxisConfig,
+                series: series,
+                colors: colors,
+                title: {
+                    text: title,
+                    align: 'left',
+                    style: {
+                        fontSize: window.innerWidth <= 768 ? '16px' : '14px',
+                        fontWeight: 'bold',
+                        color: textColor
+                    }
+                },
+                chart: {
+                    ...config.chart,
+                    type: 'line',
+                    background: 'transparent', // <--- ΣΗΜΑΝΤΙΚΗ ΑΛΛΑΓΗ: Κάνει το φόντο διάφανο
+                    foreColor: textColor,
+                    animations: {
+                        enabled: series[0].data.length > 0
+                    }
+                },
+                grid: {
+                    borderColor: gridColor,
+                    strokeDashArray: 3  // <--- ΑΥΤΟ ΕΔΩ ΚΑΝΕΙ ΤΙΣ ΓΡΑΜΜΕΣ ΔΙΑΚΕΚΟΜΜΕΝΕΣ
+                },
+                tooltip: {
+                    ...commonAxisConfig.tooltip,
+                    theme: tooltipTheme
+                },
+                noData: {
+                    text: 'No data available',
+                    align: 'center',
+                    verticalAlign: 'middle',
+                    style: {
+                        color: isDark ? '#888' : '#999',
+                        fontSize: '14px'
+                    }
                 }
-            },
-            chart: {
-                ...config.chart,
-                type: 'line',
-                background: 'transparent', // <--- ΣΗΜΑΝΤΙΚΗ ΑΛΛΑΓΗ: Κάνει το φόντο διάφανο
-                foreColor: textColor,
-                animations: {
-                    enabled: series[0].data.length > 0
-                }
-            },
-            grid: {
-                borderColor: gridColor,
-                strokeDashArray: 3  // <--- ΑΥΤΟ ΕΔΩ ΚΑΝΕΙ ΤΙΣ ΓΡΑΜΜΕΣ ΔΙΑΚΕΚΟΜΜΕΝΕΣ
-            },
-            tooltip: {
-                ...commonAxisConfig.tooltip,
-                theme: tooltipTheme
-            },
-            noData: {
-                text: 'No data available',
-                align: 'center',
-                verticalAlign: 'middle',
-                style: {
-                    color: isDark ? '#888' : '#999',
-                    fontSize: '14px'
-                }
-            }
-        });
-    
-        chart.render();
-        charts[elementId] = chart;
-    } catch (error) {
-        console.error('Error creating chart', elementId, ':', error);
-        element.innerHTML = '<div class="no-data">Error loading chart</div>';
-    }
+            });
+        
+            chart.render();
+            charts[elementId] = chart;
+        } catch (error) {
+            console.error('Error creating chart', elementId, ':', error);
+            element.innerHTML = '<div class="no-data">Error loading chart</div>';
+        }
+    }, 10); // Μικρή καθυστέρηση 10ms
 }
 
 // Save scroll position
