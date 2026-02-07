@@ -451,7 +451,8 @@ async function loadData(isBackgroundUpdate = false) {
         ]);
 
         if (!latestRes.ok || !historyRes.ok) throw new Error('API request failed');
-
+        
+        // --- Η ΜΑΓΕΙΑ ΕΔΩ: Παίρνουμε την ώρα του Server ---
         const serverDateStr = latestRes.headers.get('Date');
         if (serverDateStr) {
             const serverTime = new Date(serverDateStr).getTime();
