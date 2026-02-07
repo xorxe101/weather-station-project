@@ -54,6 +54,13 @@ h1 {
 
 /* --- DASHBOARD HEADER LAYOUT (FIXED DESIGN) --- */
 
+/* ΓΙΑ DESKTOP */
+@media screen and (min-width: 1025px) {
+    #mobile-menu-toggle { display: none; }
+    #header-content-wrapper { display: contents; }
+    .header-top-bar { display: contents; }
+}
+
 /* 1. ΓΕΝΙΚΗ ΔΙΑΤΑΞΗ & DESIGN (DESKTOP > 1024px) */
 .dashboard-header {
     /* Διάταξη: 3 Μέρη (Αριστερά - Κέντρο - Δεξιά) */
@@ -62,6 +69,8 @@ h1 {
     justify-content: space-between !important;
     align-items: center !important;
     
+    gap: 20px; /* <--- Βάλε όσο θες (π.χ. 30px, 50px) */
+
     /* ΕΝΕΡΓΟΠΟΙΗΣΗ STICKY */
     position: -webkit-sticky; /* Για Safari */
     position: sticky;         /* Για όλους τους άλλους */
@@ -71,8 +80,7 @@ h1 {
     /* Design & Χρώματα (Επαναφορά) */
     background-color: var(--background-color); /* Κρατάμε το φόντο για να μην είναι διάφανο */
     padding: 5px 25px !important;  /* Ελάχιστο padding πάνω-κάτω (5px) */
-    min-height: 90px !important;
-    height: 90px !important; /* Το ύψος που ήθελες */
+    min-height: 80px !important;
     box-shadow: 0 4px 12px rgba(0,0,0,0.15); /* Η σκιά που ήθελες */
     border-radius: 20px;
 
