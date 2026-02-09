@@ -31,9 +31,9 @@
                 required 
                 class="modal-input" 
                 style="margin-bottom: 15px;"
-                pattern="[\p{L}\p{N}_]+"
-                title="Letters from any language, numbers, and underscores only."
-                oninput="this.value = this.value.replace(/[^\p{L}\p{N}_]/gu, '')">
+                pattern="[a-zA-Z]+" 
+                title="Only English letters allowed (A-Z, a-z)"
+                oninput="this.value = this.value.replace(/[^a-zA-Z]/g, '')">
             
             <div class="password-wrapper">
                 <input type="hidden" name="password" id="real-signup-pass">

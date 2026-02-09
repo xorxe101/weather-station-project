@@ -158,10 +158,10 @@ h1 {
     white-space: nowrap;
 }
 
-/* =========================================== */
-/* 4. MOBILE LAYOUT (< 1024px) - GLOBAL CENTER */
-/* =========================================== */
-@media screen and (max-width: 1024px) {
+/* ========================================== */
+/* 4. MOBILE LAYOUT (< 768px) - GLOBAL CENTER */
+/* ========================================== */
+@media screen and (max-width: 768px) {
     
     /* 1. ΒΑΣΙΚΟ CONTAINER HEADER */
     .dashboard-header {
@@ -246,6 +246,16 @@ h1 {
     #mobile-menu-toggle.open span:nth-child(1) { transform: translateY(9px) rotate(45deg); }
     #mobile-menu-toggle.open span:nth-child(2) { opacity: 0; transform: scale(0); }
     #mobile-menu-toggle.open span:nth-child(3) { transform: translateY(-9px) rotate(-45deg); }
+
+    #moments-grid .chart-card {
+        /* Στα κινητά πιάνει πάντα όλο το πλάτος */
+        flex-basis: 100% !important;
+        width: 100% !important;
+        
+        /* Αφαιρούμε τυχόν σταθερά margins που το σπρώχνουν έξω */
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
 
 
     /* --- ΥΠΟΛΟΙΠΟ MENU & ΚΟΥΜΠΙΑ --- */
@@ -338,7 +348,7 @@ h1 {
 }
 
 /* ΓΙΑ DESKTOP */
-@media screen and (min-width: 1025px) {
+@media screen and (min-width: 769px) {
     #mobile-menu-toggle { display: none; }
     #header-content-wrapper { display: contents; }
     .header-top-bar { display: contents; }
@@ -371,7 +381,7 @@ h1 {
 }
 
 /* Σε μικρές οθόνες (Tablet portrait / Κινητά), ρίξ' το σε 1 στήλη */
-@media screen and (max-width: 900px) {
+@media screen and (max-width: 425px) {
   .chart-grid {
     grid-template-columns: 1fr;
   }
@@ -555,31 +565,9 @@ h1 {
   body { padding: 0.5rem; }
   /* Επαναφορά στο κανονικό για κινητά για να μην χαλάει το layout */
   html { font-size: 16px; } 
-  
-  .chart-grid { grid-template-columns: 1fr; gap: 1rem; }
   h1 { font-size: 1.6rem; }
   
   .status-info { text-align: center !important; width: 100%; margin-top: 10px; display: block; }
-}
-
-@media screen and (max-width: 480px) {
-  .chart-grid { grid-template-columns: 1fr; width: 100%; margin: 1rem 0; }
-  .chart-card { padding: 10px; }
-  /* NEW: Fix Export Dropdown on small screens */
-  .export-dropdown-content {
-      position: fixed; /* Detach from the button */
-      top: 50%; 
-      left: 50%; 
-      right: auto;
-      transform: translate(-50%, -50%); /* Center perfectly */
-      width: 85%; /* Don't spill over edges */
-      min-width: unset; /* Override standard width */
-      max-width: 350px; 
-      max-height: 70vh; /* Don't go taller than screen */
-      overflow-y: auto; /* Scroll if list is long */
-      box-shadow: 0 0 0 1000px rgba(0,0,0,0.5); /* Fake backdrop dimming */
-      border: 1px solid #ddd;
-  }
 }
 
 /* --- SPECIAL: MINIMALIST MODAL (Icon Only) --- */
@@ -701,13 +689,6 @@ button img {
     */
     flex: 1 1 calc(50% - 2rem) !important; 
     min-width: 350px; /* Ελάχιστο πλάτος για να μην διαλύεται σε μικρές οθόνες */
-}
-
-/* Για κινητά: Αναγκαστικά 100% πλάτος */
-@media screen and (max-width: 900px) {
-    #moments-grid .chart-card {
-        flex-basis: 100% !important;
-    }
 }
 
 /* --- THEME TOGGLE ICON --- */

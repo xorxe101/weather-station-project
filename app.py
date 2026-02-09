@@ -4,7 +4,7 @@ from flask_login import LoginManager, UserMixin, login_user, login_required, log
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
 import time, threading, json, os
-import pymysql
+import pymysql, re
 
 # Import your existing sensor reader
 from sensor_reader import sensor_reader
@@ -160,6 +160,12 @@ def signup():
         username = request.form.get('username')
         password = request.form.get('password')
         
+        # Έλεγχος: Μόνο αγγλικά γράμματα (κεφαλαία ή μικρά)
+        # ^ = αρχή, [a-zA-Z] = αγγλικοί χαρακτήρες, + = ένας ή περισσότεροι, $ = τέλος
+        if not re.match(r'^[a-zA-Z]+$', username):
+            flash('Το όνομα χρήστη πρέπει να περιέχει μόνο Αγγλικούς χαρακτήρες (A-Z).', 'error')
+            return redirect(url_for('signup'))
+
         user = User.query.filter_by(username=username).first()
         if user:
             flash('Username already exists')
