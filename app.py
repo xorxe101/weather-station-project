@@ -160,10 +160,10 @@ def signup():
         username = request.form.get('username')
         password = request.form.get('password')
         
-        # Έλεγχος: Μόνο αγγλικά γράμματα (κεφαλαία ή μικρά)
-        # ^ = αρχή, [a-zA-Z] = αγγλικοί χαρακτήρες, + = ένας ή περισσότεροι, $ = τέλος
-        if not re.match(r'^[a-zA-Z]+$', username):
-            flash('Το όνομα χρήστη πρέπει να περιέχει μόνο Αγγλικούς χαρακτήρες (A-Z).', 'error')
+        # --- 1. ΕΛΕΓΧΟΣ ΜΟΡΦΗΣ USERNAME ---
+        # Επιτρέπονται: a-z, A-Z, 0-9, κάτω παύλα (_), τελεία (.)
+        if not re.match(r'^[a-zA-Z0-9_.]+$', username):
+            flash('Username can only contain letters, numbers, dots (.), and underscores (_).')
             return redirect(url_for('signup'))
 
         user = User.query.filter_by(username=username).first()

@@ -31,9 +31,9 @@
                 required 
                 class="modal-input" 
                 style="margin-bottom: 15px;"
-                pattern="[a-zA-Z]+" 
-                title="Only English letters allowed (A-Z, a-z)"
-                oninput="this.value = this.value.replace(/[^a-zA-Z]/g, '')">
+                pattern="[a-zA-Z0-9_.]+"
+                title="Characters allowed: (A-Z, a-z, 0-9, _, .)"
+                oninput="this.value = this.value.replace(/[^a-zA-Z0-9_.]/g, '')">
             
             <div class="password-wrapper">
                 <input type="hidden" name="password" id="real-pass">
