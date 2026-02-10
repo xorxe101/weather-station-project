@@ -68,6 +68,8 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(150), unique=True, nullable=False)
     password = db.Column(db.String(150), nullable=False)
     moments = db.relationship('SavedMoment', backref='user', lazy=True)
+    temp_unit = db.Column(db.String(5), default='C')   # 'C' ή 'F'
+    wind_unit = db.Column(db.String(5), default='kmh') # 'kmh' ή 'ms'
 
 class SavedMoment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -233,6 +235,24 @@ def profile():
         return redirect(url_for('profile'))
         
     return render_template('profile.html', current_user=current_user)
+
+@app.route('/api/update_preferences', methods=['POST'])
+@login_required
+def update_preferences():
+    data = request.json
+    
+    # Ενημέρωση των πεδίων του χρήστη
+    if 'temp_unit' in data:
+        current_user.temp_unit = data['temp_unit']
+    
+    if 'wind_unit' in data:
+        current_user.wind_unit = data['wind_unit']
+        
+    try:
+        db.session.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/delete_account', methods=['DELETE'])
 @login_required

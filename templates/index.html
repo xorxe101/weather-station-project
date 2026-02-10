@@ -115,6 +115,12 @@
       // --- STICKY HEADER DETECTION ---
       const sentinel = document.getElementById('sentinel');
       const header = document.querySelector('.dashboard-header');
+      // Περνάμε τις ρυθμίσεις της βάσης στο JS
+      const SERVER_PREFS = {
+        isLoggedIn: {{ 'true' if current_user.is_authenticated else 'false' }},
+        temp: "{{ current_user.temp_unit if current_user.is_authenticated else 'C' }}",
+        wind: "{{ current_user.wind_unit if current_user.is_authenticated else 'kmh' }}"
+      };
 
       const observer = new IntersectionObserver((entries) => {
           if (!entries[0].isIntersecting) {

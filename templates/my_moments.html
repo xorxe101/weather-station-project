@@ -157,19 +157,21 @@
                     </button>
                     <div id="charts-container-{{ moment.id }}" class="moment-charts">
                         <div class="charts-wrapper">
-                            <div id="temp-chart-{{ moment.id }}" class="mini-chart"></div>
-                            <div id="humidity-chart-{{ moment.id }}" class="mini-chart"></div>
-                            <div id="pressure-chart-{{ moment.id }}" class="mini-chart"></div>
-                            <div id="wind-chart-{{ moment.id }}" class="mini-chart"></div>
-                            <div id="wind-dir-chart-{{ moment.id }}" class="mini-chart"></div>
-                            <div id="rain-chart-{{ moment.id }}" class="mini-chart"></div>
-                            <div id="dew-chart-{{ moment.id }}" class="mini-chart"></div>
+                            <div id="tempChart_{{ moment.id }}" class="mini-chart"></div>
+                            <div id="humidityChart_{{ moment.id }}" class="mini-chart"></div>
+                            <div id="pressureChart_{{ moment.id }}" class="mini-chart"></div>
+                            <div id="windspeedChart_{{ moment.id }}" class="mini-chart"></div>
+                            <div id="winddirectionChart_{{ moment.id }}" class="mini-chart"></div>
+                            <div id="rainfallrateChart_{{ moment.id }}" class="mini-chart"></div>
+                            <div id="dewpointChart_{{ moment.id }}" class="mini-chart"></div>
                         </div>
                     </div>
                     <script>
                         document.addEventListener('DOMContentLoaded', function() {
                             const historyData = {{ moment.history | tojson }};
-                            renderMomentCharts({{ moment.id }}, historyData);
+                            // Καλούμε την ΕΞΥΠΝΗ συνάρτηση από το dashboard.js
+                            // Περνάμε το suffix (π.χ. "_5") και τα δεδομένα
+                            renderSavedMomentCharts("_{{ moment.id }}", historyData);
                         });
                     </script>
                 {% else %}
@@ -261,108 +263,6 @@
             const container = document.getElementById(`charts-container-${id}`);
             if (container.style.display === "block") container.style.display = "none";
             else { container.style.display = "block"; window.dispatchEvent(new Event('resize')); }
-        }
-        
-        function parseDate(isoString) { 
-            if (!isoString) return new Date();
-            const parts = isoString.split(/[-T:]/); 
-            return new Date(parts[0], parts[1]-1, parts[2], parts[3], parts[4], parts[5]||0); 
-        }
-        
-        function getValue(row, key) {
-            const keys = [key, key.toLowerCase(), key.replace(' ', ''), key.replace(' ', '').toLowerCase()];
-            for (const k of keys) {
-                if (row[k] !== undefined && row[k] !== null) {
-                    const num = parseFloat(row[k]);
-                    return isNaN(num) ? null : num;
-                }
-            }
-            return null;
-        }
-
-        function renderMomentCharts(id, history) {
-            // 1. ΡΥΘΜΙΣΕΙΣ DARK MODE (Αντιγραφή από Dashboard Logic)
-            const isDark = localStorage.getItem('theme') === 'dark';
-            const textColor = isDark ? '#ffffff' : '#666666';
-            const gridColor = isDark ? '#404040' : '#f0f0f0';
-            const tooltipTheme = isDark ? 'dark' : 'light';
-
-            // 2. ΚΟΙΝΕΣ ΡΥΘΜΙΣΕΙΣ
-            const commonOptions = { 
-                chart: { 
-                    type: 'line', 
-                    height: 350, 
-                    background: 'transparent', // ΣΗΜΑΝΤΙΚΟ: Διάφανο φόντο
-                    foreColor: textColor,      // Σωστό χρώμα κειμένου (Άξονες κλπ)
-                    toolbar: { show: true, tools: { download: true, selection: true, zoom: true, zoomin: true, zoomout: true, pan: true, reset: true } },
-                    animations: { enabled: true, easing: 'easein', speed: 800 }
-                }, 
-                xaxis: { 
-                    type: 'datetime', 
-                    labels: { 
-                        datetimeUTC: false, 
-                        format: 'HH:mm', 
-                        style: { colors: textColor, fontSize: '14px' } // Δυναμικό χρώμα
-                    } 
-                },
-                yaxis: { 
-                    labels: { style: { colors: textColor, fontSize: '14px' } } // Δυναμικό χρώμα
-                }, 
-                zoom: { enabled: true, type: 'x', autoScaleYaxis: true },
-                selection: { enabled: true },
-                grid: { borderColor: gridColor, strokeDashArray: 3 }, // Δυναμικό χρώμα πλέγματος
-                stroke: { width: 2, curve: 'smooth' }, 
-                markers: { size: 0, hover: { size: 5 } },
-                tooltip: { 
-                    x: { format: 'HH:mm dd MMM yyyy' }, 
-                    theme: tooltipTheme, // Σωστό θέμα tooltip (μαύρο/άσπρο)
-                    shared: true, 
-                    intersect: false 
-                }
-            };
-            
-            const getSeries = (key) => history.map(row => ({ x: parseDate(row.Time).getTime(), y: getValue(row, key) })).filter(p => p.x && !isNaN(p.x));
-
-            // 3. ΔΗΜΙΟΥΡΓΙΑ ΓΡΑΦΗΜΑΤΩΝ (Περνάμε το textColor και στους τίτλους)
-            
-            new ApexCharts(document.querySelector(`#temp-chart-${id}`), { 
-                ...commonOptions, 
-                series: [{ name: 'Air Temp', data: getSeries('Air Temperature') }, { name: 'Ground Temp', data: getSeries('Soil Temperature') }], 
-                colors: ['#FF4560', '#00E396'], 
-                title: { text: 'Temperature (°C)', style: { fontSize: '14px', fontWeight:'bold', color: textColor } } 
-            }).render();
-
-            new ApexCharts(document.querySelector(`#humidity-chart-${id}`), {
-                ...commonOptions, series: [{ name: 'Humidity', data: getSeries('Humidity') }], colors: ['#775DD0'],
-                title: { text: 'Humidity (%)', style: { fontSize: '14px', fontWeight:'bold', color: textColor } }
-            }).render();
-
-            new ApexCharts(document.querySelector(`#pressure-chart-${id}`), {
-                ...commonOptions, series: [{ name: 'Pressure', data: getSeries('Pressure') }], colors: ['#546E7A'],
-                title: { text: 'Pressure (hPa)', style: { fontSize: '14px', fontWeight:'bold', color: textColor } }
-            }).render();
-
-            new ApexCharts(document.querySelector(`#wind-chart-${id}`), {
-                ...commonOptions, series: [{ name: 'Wind Speed', data: getSeries('WindSpeed') }], colors: ['#00D9E9'],
-                title: { text: 'Wind Speed (km/h)', style: { fontSize: '14px', fontWeight:'bold', color: textColor } }
-            }).render();
-
-            new ApexCharts(document.querySelector(`#wind-dir-chart-${id}`), {
-                ...commonOptions, series: [{ name: 'Wind Direction', data: getSeries('WindDirection') }], colors: ['#FFB800'],
-                title: { text: 'Wind Direction (°)', style: { fontSize: '14px', fontWeight:'bold', color: textColor } }
-            }).render();
-
-            new ApexCharts(document.querySelector(`#rain-chart-${id}`), {
-                ...commonOptions, 
-                series: [{ name: 'RainFall (mm)', data: getSeries('RainFall') }, { name: 'RainRate (mm/h)', data: getSeries('RainRate') }], 
-                colors: ['#008FFB', '#FEB019'],
-                title: { text: 'Rainfall & Rate', style: { fontSize: '14px', fontWeight:'bold', color: textColor } }
-            }).render();
-
-            new ApexCharts(document.querySelector(`#dew-chart-${id}`), {
-                ...commonOptions, series: [{ name: 'Dew Point', data: getSeries('DewPoint') }], colors: ['#8E44AD'],
-                title: { text: 'Dew Point (°C)', style: { fontSize: '14px', fontWeight:'bold', color: textColor } }
-            }).render();
         }
 
         // --- UNIVERSAL DROPDOWN LOGIC ---

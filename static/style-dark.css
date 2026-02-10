@@ -477,3 +477,63 @@ body {
 .pressure-widget::before {
     color: #666;
 }
+
+/* =========================================== */
+/* DARK MODE SETTINGS (PROFILE) - ΝΕΑ ΧΡΩΜΑΤΑ */
+/* =========================================== */
+
+/* 1. Το Κουτί των Ρυθμίσεων (Πιο ουδέτερο σκούρο) */
+.profile-section {
+    background-color: #18181b !important; /* Πολύ σκούρο γκρι/μαύρο (Charcoal) */
+    border-color: #27272a !important;     /* Ελαφρώς πιο ανοιχτό περίγραμμα */
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+/* 2. Οι γραμμές ανάμεσα στις επιλογές */
+.setting-item {
+    border-bottom-color: #27272a !important;
+}
+
+/* 3. Τα κείμενα (Labels) */
+.setting-item label {
+    color: #ececec !important; /* Σχεδόν λευκό για καλή αντίθεση */
+}
+
+/* 4. Το φόντο του διακόπτη (Toggle Switch - Σχεδόν μαύρο) */
+.toggle-switch {
+    background-color: #09090b !important; /* Πιο σκούρο από το κουτί */
+    border: 1px solid #27272a;
+}
+
+/* 5. Τα γράμματα μέσα στον διακόπτη (Ανενεργά) */
+.toggle-switch label {
+    color: #71717a !important; /* Ουδέτερο γκρι */
+}
+
+/* 6. Όταν μια επιλογή είναι ενεργή (Active) */
+.toggle-switch input:checked + label {
+    background-color: var(--primary-color) !important; /* Το μπλε χρώμα τονισμού παραμένει */
+    color: #ffffff !important;
+}
+
+/* 7. Διόρθωση για το Password Toggle (Ματάκι) */
+.password-toggle img {
+    filter: invert(1) grayscale(1); /* Το κάνουμε λευκό και αφαιρούμε τυχόν χρώμα */
+    opacity: 0.8;
+}
+
+/* 8. Τίτλοι */
+h3 {
+    color: #ffffff !important;
+}
+
+/* Όταν είμαστε σε Dark Mode, αντιστρέφουμε τα χρώματα του εικονιδίου */
+.prefpass-icon {
+    /* invert(1): Κάνει το μαύρο -> λευκό (και το αντίστροφο).
+       grayscale(1): (Προαιρετικό) Αφαιρεί τυχόν χρώμα αν το PNG δεν είναι τελείως ασπρόμαυρο, για πιο καθαρό αποτέλεσμα.
+    */
+    filter: invert(1) grayscale(1) !important;
+    
+    /* Προαιρετικά, μειώνουμε λίγο τη φωτεινότητα για να μην είναι "τυφλωτικό" λευκό */
+    opacity: 0.9; 
+}

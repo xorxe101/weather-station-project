@@ -24,14 +24,54 @@
                  style="width: 100px; height: 100px; border-radius: 50%; border: 4px solid #0066cc; object-fit: cover; margin-bottom: 1rem;">
             <h2 style="margin: 0; color: #333; margin-bottom: 5px;">{{ current_user.username }}</h2>
             <div style="margin-top: 15px;">
-                <a href="/logout" class="action-btn logout-btn">Logout</a>
+                <a href="/logout" class="action-btn logout-btn" 
+                    onclick="localStorage.setItem('unit_temp', 'C'); localStorage.setItem('unit_wind', 'kmh');">
+                    Logout
+                </a>
                 <button onclick="deleteAccount()" class="action-btn delete-btn-main">Delete Account</button>
             </div>
         </div>
 
-        <hr style="border: 0; border-top: 1px solid #eee; margin: 2rem 0;">
+        <hr style="border: 0; border-top: 1px solid #eee; margin: 1rem 0;">
 
-        <h3 style="margin-bottom: 1rem;">Change Password</h3>
+        <h3 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 10px;">
+            <img src="{{ url_for('static', filename='img_icon/settings.png') }}" 
+                alt="Settings" 
+                class="prefpass-icon">
+            Preferences
+        </h3>
+        <div class="profile-section">
+            
+            <div class="setting-item">
+                <label>Temperature Unit:</label>
+                <div class="toggle-switch">
+                    <input type="radio" id="unit-c" name="temp_unit" value="C" onchange="saveUnitPref('temp', 'C')" {% if current_user.temp_unit == 'C' %}checked{% endif %}>
+                    <label for="unit-c">°C</label>
+                    
+                    <input type="radio" id="unit-f" name="temp_unit" value="F" onchange="saveUnitPref('temp', 'F')" {% if current_user.temp_unit == 'F' %}checked{% endif %}>
+                    <label for="unit-f">°F</label>
+                </div>
+            </div>
+
+            <div class="setting-item">
+                <label>Wind Speed Unit:</label>
+                <div class="toggle-switch">
+                    <input type="radio" id="unit-kmh" name="wind_unit" value="kmh" onchange="saveUnitPref('wind', 'kmh')" {% if current_user.wind_unit == 'kmh' %}checked{% endif %}>
+                    <label for="unit-kmh">km/h</label>
+                    
+                    <input type="radio" id="unit-ms" name="wind_unit" value="ms" onchange="saveUnitPref('wind', 'ms')" {% if current_user.wind_unit == 'ms' %}checked{% endif %}>
+                    <label for="unit-ms">m/s</label>
+                </div>
+            </div>
+
+        </div>
+
+        <h3 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 10px;">
+            <img src="{{ url_for('static', filename='img_icon/password.png') }}" 
+                alt="Password Change" 
+                class="prefpass-icon">
+            Password Change
+        </h3>
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
@@ -66,6 +106,14 @@
             <button type="submit" class="control-btn" style="width: 100%; margin-top: 10px;">Update Password</button>
         </form>
     </div>
+    <script>
+        // Περνάμε τις ρυθμίσεις της βάσης στο JS
+        const SERVER_PREFS = {
+            isLoggedIn: {{ 'true' if current_user.is_authenticated else 'false' }},
+            temp: "{{ current_user.temp_unit if current_user.is_authenticated else 'C' }}",
+            wind: "{{ current_user.wind_unit if current_user.is_authenticated else 'kmh' }}"
+        };
+    </script>
     <script src="{{ url_for('static', filename='dashboard.js') }}"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {

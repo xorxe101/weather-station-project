@@ -1944,3 +1944,72 @@ button:focus, a:focus, input:focus, textarea:focus {
     }
     /* Καταλήγει στο var(--rotation) που ορίσαμε */
 }
+
+/* --- PROFILE SETTINGS STYLES --- */
+.profile-section {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 12px;
+    border: 1px solid #e9ecef;
+    margin-bottom: 20px;
+    /* ΑΦΑΙΡΕΣΑΜΕ ΤΟ transition ΑΠΟ ΕΔΩ */
+}
+
+.setting-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+    /* ΑΦΑΙΡΕΣΑΜΕ ΤΟ transition ΑΠΟ ΕΔΩ */
+}
+
+.setting-item:last-child {
+    border-bottom: none;
+}
+
+.setting-item label {
+    font-weight: 600;
+    color: #555;
+    margin: 0;
+    /* ΑΦΑΙΡΕΣΑΜΕ ΤΟ transition ΑΠΟ ΕΔΩ */
+}
+
+/* Custom Toggle Switch */
+.toggle-switch {
+    display: flex;
+    background: #e2e6ea;
+    border-radius: 8px;
+    padding: 3px;
+    position: relative;
+    /* ΑΦΑΙΡΕΣΑΜΕ ΤΟ transition ΑΠΟ ΕΔΩ */
+}
+
+.toggle-switch input {
+    display: none; /* Κρύβουμε τα πραγματικά radio buttons */
+}
+
+.toggle-switch label {
+    padding: 6px 14px;
+    cursor: pointer;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    color: #666;
+    transition: all 0.2s ease;
+    min-width: 30px;
+    text-align: center;
+}
+
+/* Όταν επιλεχθεί το radio, αλλάζει το label του */
+.toggle-switch input:checked + label {
+    background: var(--primary-color);
+    color: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    font-weight: bold;
+}
+
+/* Βασικό στυλ για το εικονίδιο (Light Mode) */
+.prefpass-icon {
+    width: 24px;
+    height: 24px;
+}

@@ -12,6 +12,59 @@ let intervalRefreshTimeout;
 let globalHistoryData = [];
 const MAX_RETENTION_HOURS = 24;
 
+// --- UNITS CONFIGURATION (SYNCED) ---
+
+// 1. ΣΥΓΧΡΟΝΙΣΜΟΣ
+if (typeof SERVER_PREFS !== 'undefined') {
+    if (SERVER_PREFS.isLoggedIn) {
+        // Α. LOGGED IN USER: Η Βάση είναι το Αφεντικό
+        if (SERVER_PREFS.temp) localStorage.setItem('unit_temp', SERVER_PREFS.temp);
+        if (SERVER_PREFS.wind) localStorage.setItem('unit_wind', SERVER_PREFS.wind);
+        console.log("🔄 Synced Units from DB:", SERVER_PREFS.temp, SERVER_PREFS.wind);
+    } else {
+        // Β. GUEST / LOGGED OUT: Επαναφορά στα Defaults (C, kmh)
+        // Αυτό καθαρίζει τυχόν "σκουπίδια" από προηγούμενο login
+        localStorage.setItem('unit_temp', 'C');
+        localStorage.setItem('unit_wind', 'kmh');
+        console.log("🔄 Guest Mode: Reset units to defaults (C, kmh)");
+    }
+}
+
+// 2. Τώρα διαβάζουμε τις τιμές (που πλέον είναι καθαρές)
+let userUnits = {
+    temp: localStorage.getItem('unit_temp') || 'C',
+    wind: localStorage.getItem('unit_wind') || 'kmh'
+};
+
+// 3. Συνάρτηση αποθήκευσης (Παραμένει ίδια)
+function saveUnitPref(type, value) {
+    if (type === 'temp') userUnits.temp = value;
+    if (type === 'wind') userUnits.wind = value;
+    
+    localStorage.setItem('unit_' + type, value);
+    
+    if (typeof SERVER_PREFS !== 'undefined' && SERVER_PREFS.isLoggedIn) {
+        fetch('/api/update_preferences', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ temp_unit: userUnits.temp, wind_unit: userUnits.wind })
+        }).catch(err => console.error(err));
+    }
+
+    if (document.getElementById('latest')) updateDisplay(null, globalHistoryData);
+}
+
+// Μετατροπείς
+function convertTemp(val) {
+    if (val === null || val === undefined) return null;
+    return userUnits.temp === 'F' ? (val * 9/5) + 32 : val;
+}
+
+function convertWind(val) {
+    if (val === null || val === undefined) return null;
+    return userUnits.wind === 'ms' ? val / 3.6 : val;
+}
+
 // ENABLED Chart configuration - Zoom and selection tools are now enabled
 const commonChartConfig = {
     height: 350,
@@ -528,215 +581,127 @@ function getValue(obj, key) {
 }
 
 function updateDisplay(latest, history) {
-    console.log('Updating display with data...');
-
-    // Αν το 'latest' είναι άδειο (συμβαίνει συχνά στις 12), πάρε την τελευταία τιμή από το history
-    if ((!latest || !latest.Time) && history && history.length > 0) {
-        latest = history[0]; // Το ιστορικό είναι συνήθως ταξινομημένο από το πιο πρόσφατο
-        console.log("⚠️ Latest data missing at rollover, using last history point.");
-    }
+    // Fallback logic
+    if ((!latest || !latest.Time) && history && history.length > 0) latest = history[0];
     
-    // Update current weather display
+    // Καθορισμός ετικετών μονάδων
+    const tUnit = userUnits.temp === 'F' ? '°F' : '°C';
+    const wUnit = userUnits.wind === 'ms' ? 'm/s' : 'km/h';
+
+    // Update Widgets
     if (latest && latest.Time) {
-    const nowText = parseDate(latest.Time).toLocaleTimeString('el-GR', { hour12: false });
-    document.getElementById('latest').innerHTML = `
-        <div class="current-weather">
-        <div class="time-box">
-            <h3>Current Weather: ${nowText}</h3>
-        </div>
-        ${createWeatherBox('Air Temp', getValue(latest, 'Air Temperature'), '°C')}
-        ${createWeatherBox('Ground Temp', getValue(latest, 'Soil Temperature'), '°C')}
-        ${createHumidityDropBox(getValue(latest, 'Humidity'))}
-        ${createWeatherBox('Wind Speed', getValue(latest, 'WindSpeed'), ' km/h')}
-        ${createWindCompassBox(getValue(latest, 'WindDirection'))}
-        ${createWeatherBox('Rainfall', getValue(latest, 'RainFall'), 'mm')}
-        ${createWeatherBox('Rainrate', getValue(latest, 'RainRate'), 'mm/h')}
-        ${createWeatherBox('Dew Point', getValue(latest, 'DewPoint'), '°C')}
-        ${createWeatherBox('Pressure', getValue(latest, 'Pressure'), 'hPa')}
-        </div>
-    `;
-    } else {
-    document.getElementById('latest').innerHTML = '<div class="current-weather"><h3>No current data available</h3></div>';
+        const nowText = parseDate(latest.Time).toLocaleTimeString('el-GR', { hour12: false });
+        
+        // Μετατροπή τιμών
+        const airTemp = convertTemp(getValue(latest, 'Air Temperature'));
+        const groundTemp = convertTemp(getValue(latest, 'Soil Temperature'));
+        const dewPoint = convertTemp(getValue(latest, 'DewPoint'));
+        const windSpeed = convertWind(getValue(latest, 'WindSpeed'));
+
+        document.getElementById('latest').innerHTML = `
+            <div class="current-weather">
+                <div class="time-box"><h3>Current Weather: ${nowText}</h3></div>
+                ${createWeatherBox('Air Temp', airTemp, tUnit)}
+                ${createWeatherBox('Ground Temp', groundTemp, tUnit)}
+                ${createHumidityDropBox(getValue(latest, 'Humidity'))}
+                ${createWeatherBox('Wind Speed', windSpeed, wUnit)}
+                ${createWindCompassBox(getValue(latest, 'WindDirection'))}
+                ${createWeatherBox('Rainfall', getValue(latest, 'RainFall'), 'mm')}
+                ${createWeatherBox('Rainrate', getValue(latest, 'RainRate'), 'mm/h')}
+                ${createWeatherBox('Dew Point', dewPoint, tUnit)}
+                ${createWeatherBox('Pressure', getValue(latest, 'Pressure'), 'hPa')}
+            </div>
+        `;
     }
 
-    // Check if we have history data
-    if (!history || !Array.isArray(history) || history.length === 0) {
-    console.log('No history data available');
-    // Clear all charts
-    Object.keys(charts).forEach(chartId => {
-        if (charts[chartId]) {
-        charts[chartId].destroy();
+    if (!history || history.length === 0) return;
+
+    // --- Prepare Chart Data (Converted & Rounded) ---
+    // ΑΥΤΗ ΕΙΝΑΙ Η ΑΛΛΑΓΗ: Προσθέσαμε στρογγυλοποίηση
+    const prepareData = (key, converter) => history.map(row => {
+        let val = converter ? converter(getValue(row, key)) : getValue(row, key);
+        
+        // Αν είναι αριθμός, κράτα μόνο 1 δεκαδικό
+        if (typeof val === 'number') {
+            val = parseFloat(val.toFixed(1));
         }
-        document.getElementById(chartId).innerHTML = '<div class="no-data">No data available</div>';
-    });
-    return;
-    }
+        
+        return {
+            x: parseDate(row.Time).getTime(),
+            y: val
+        };
+    }).filter(p => p.x && !isNaN(p.y));
 
-    // Prepare chart data with NaN handling
+    // Data Series
     const tempSeries = [
-    { 
-        name: 'Air Temp (°C)', 
-        data: history.map(row => {
-        const value = getValue(row, 'Air Temperature');
-        return { 
-            x: parseDate(row.Time).getTime(), 
-            y: value
-        };
-        }).filter(point => point.x && !isNaN(point.x)) // Filter out invalid points
-    },
-    { 
-        name: 'Ground Temp (°C)', 
-        data: history.map(row => {
-        const value = getValue(row, 'Soil Temperature');
-        return { 
-            x: parseDate(row.Time).getTime(), 
-            y: value
-        };
-        }).filter(point => point.x && !isNaN(point.x))
-    }
+        { name: `Air Temp (${tUnit})`, data: prepareData('Air Temperature', convertTemp) },
+        { name: `Ground Temp (${tUnit})`, data: prepareData('Soil Temperature', convertTemp) }
+    ];
+    
+    const windSeries = [
+        { name: `Wind Speed (${wUnit})`, data: prepareData('WindSpeed', convertWind) }
+    ];
+    
+    const dewSeries = [
+        { name: `Dew Point (${tUnit})`, data: prepareData('DewPoint', convertTemp) }
     ];
 
-    const rainfallSeries = [
-    { 
-        name: 'RainFall (mm)', 
-        data: history.map(row => {
-        const value = getValue(row, 'RainFall');
-        return { 
-            x: parseDate(row.Time).getTime(), 
-            y: value
-        };
-        }).filter(point => point.x && !isNaN(point.x))
-    },
-    { 
-        name: 'RainRate (mm/h)', 
-        data: history.map(row => {
-        const value = getValue(row, 'RainRate');
-        return { 
-            x: parseDate(row.Time).getTime(), 
-            y: value
-        };
-        }).filter(point => point.x && !isNaN(point.x))
-    }
-    ];
-
-    // Initialize or update charts with mobile-optimized config
-    const mobileConfig = getMobileChartConfig();
+    const config = getMobileChartConfig();
     
-    console.log('Creating charts...');
-    
-    // Create individual series for each chart with NaN handling
-    createChart('tempChart', 'Temperature (°C)', tempSeries, ['#FF4560', '#00E396'], mobileConfig);
-    createChart('humidityChart', 'Humidity (%)', 
-    [{ 
-        name: 'Humidity', 
-        data: history.map(row => {
-        const value = getValue(row, 'Humidity');
-        return { 
-            x: parseDate(row.Time).getTime(), 
-            y: value
-        };
-        }).filter(point => point.x && !isNaN(point.x))
-    }], 
-    ['#775DD0'], mobileConfig);
-    createChart('pressureChart', 'Pressure (hPa)', 
-    [{ 
-        name: 'Pressure', 
-        data: history.map(row => {
-        const value = getValue(row, 'Pressure');
-        return { 
-            x: parseDate(row.Time).getTime(), 
-            y: value
-        };
-        }).filter(point => point.x && !isNaN(point.x))
-    }], 
-    ['#546E7A'], mobileConfig);
-    createChart('windspeedChart', 'Wind Speed (km/h)', 
-    [{ 
-        name: 'Wind Speed', 
-        data: history.map(row => {
-        const value = getValue(row, 'WindSpeed');
-        return { 
-            x: parseDate(row.Time).getTime(), 
-            y: value
-        };
-        }).filter(point => point.x && !isNaN(point.x))
-    }], 
-    ['#00D9E9'], mobileConfig);
-    createChart('winddirectionChart', 'Wind Direction (°)', 
-    [{ 
-        name: 'Wind Direction', 
-        data: history.map(row => {
-        const value = getValue(row, 'WindDirection');
-        return { 
-            x: parseDate(row.Time).getTime(), 
-            y: value
-        };
-        }).filter(point => point.x && !isNaN(point.x))
-    }], 
-    ['#FFB800'], mobileConfig);
-    createChart('rainfallrateChart', 'Rainfall & Rain Rate', rainfallSeries, ['#008FFB', '#FEB019'], mobileConfig);
-    createChart('dewpointChart', 'Dew Point (°C)', 
-    [{ 
-        name: 'Dew Point', 
-        data: history.map(row => {
-        const value = getValue(row, 'DewPoint');
-        return { 
-            x: parseDate(row.Time).getTime(), 
-            y: value
-        };
-        }).filter(point => point.x && !isNaN(point.x))
-    }], 
-    ['#8E44AD'], mobileConfig);
-    
-    console.log('Charts created successfully');
+    // Create Charts
+    createChart('tempChart', `Temperature (${tUnit})`, tempSeries, ['#FF4560', '#00E396'], config);
+    createChart('humidityChart', 'Humidity (%)', [{name:'Humidity', data: prepareData('Humidity')}], ['#775DD0'], config);
+    createChart('pressureChart', 'Pressure (hPa)', [{name:'Pressure', data: prepareData('Pressure')}], ['#546E7A'], config);
+    createChart('windspeedChart', `Wind Speed (${wUnit})`, windSeries, ['#00D9E9'], config);
+    createChart('winddirectionChart', 'Wind Direction (°)', [{name:'Wind Direction', data: prepareData('WindDirection')}], ['#FFB800'], config);
+    createChart('rainfallrateChart', 'Rainfall', [
+        {name:'RainFall (mm)', data: prepareData('RainFall')},
+        {name:'RainRate (mm/h)', data: prepareData('RainRate')}
+    ], ['#008FFB', '#FEB019'], config);
+    createChart('dewpointChart', `Dew Point (${tUnit})`, dewSeries, ['#8E44AD'], config);
 }
 
 // --- DYNAMIC COLOR LOGIC ---
 function getColorClass(label, value) {
     if (value === null || value === undefined) return '';
-
-    // Καθαρίζουμε το label για να κάνουμε εύκολα ελέγχους (π.χ. "Air Temp" -> "temp")
     const type = label.toLowerCase();
 
-    // 1. ΘΕΡΜΟΚΡΑΣΙΑ (Temperature)
-    if (type.includes('temp') || type.includes('dew point')) {
-        if (value <= 5) return 'val-cold';       // Κρύο (<= 5°C)
-        if (value <= 15) return 'val-cool';      // Δροσιά (6-15°C)
-        if (value <= 28) return 'val-optimal';   // Ιδανικά (16-28°C)
-        if (value <= 35) return 'val-caution';   // Ζέστη (29-35°C)
-        return 'val-danger';                     // Καύσωνας (> 35°C)
+    // Μετατροπή πίσω σε Standard Units (C, km/h) για τον έλεγχο χρώματος
+    let valC = value;
+    if ((type.includes('temp') || type.includes('dew')) && userUnits.temp === 'F') {
+        valC = (value - 32) * 5/9;
+    }
+    let valKmh = value;
+    if (type.includes('wind') && userUnits.wind === 'ms') {
+        valKmh = value * 3.6;
     }
 
-    // 2. ΥΓΡΑΣΙΑ (Humidity)
+    if (type.includes('temp') || type.includes('dew')) {
+        if (valC <= 5) return 'val-cold';
+        if (valC <= 15) return 'val-cool';
+        if (valC <= 28) return 'val-optimal';
+        if (valC <= 35) return 'val-caution';
+        return 'val-danger';
+    }
+    if (type.includes('wind')) {
+        if (valKmh <= 10) return 'val-optimal';
+        if (valKmh <= 40) return 'val-caution';
+        if (valKmh <= 70) return 'val-danger';
+        return 'val-extreme';
+    }
+    
+    // Τα υπόλοιπα μένουν ίδια...
     if (type.includes('humidity')) {
-        if (value < 30) return 'val-caution';    // Πολύ ξηρό (< 30%)
-        if (value <= 70) return 'val-optimal';   // Φυσιολογικό (30-70%)
-        return 'val-cold';                       // Υγρό (> 70% - Μπλε)
+        if (value < 30) return 'val-caution';
+        if (value <= 70) return 'val-optimal';
+        return 'val-cold';
     }
-
-    // 3. ΑΝΕΜΟΣ (Wind Speed)
-    if (type.includes('wind speed')) {
-        if (value <= 10) return 'val-optimal';   // Άπνοια/Λίγο
-        if (value <= 40) return 'val-caution';   // Ισχυρός
-        if (value <= 70) return 'val-danger';    // Θύελλα
-        return 'val-extreme';                    // Τυφώνας
-    }
-
-    // 4. ΒΡΟΧΗ (Rain)
-    if (type.includes('rain')) {
-        if (value === 0) return '';              // Τίποτα (Default χρώμα)
-        if (value <= 10) return 'val-cold';      // Βροχή (Μπλε)
-        return 'val-danger';                     // Καταιγίδα (Κόκκινο)
-    }
-
-    // 5. ΠΙΕΣΗ (Pressure)
     if (type.includes('pressure')) {
-        if (value < 1000) return 'val-cool';     // Χαμηλή (Συνήθως έρχεται βροχή)
-        if (value > 1025) return 'val-caution';  // Πολύ Υψηλή
-        return 'val-optimal';                    // Κανονική
+        if (value < 1000) return 'val-cool';
+        if (value > 1025) return 'val-caution';
+        return 'val-optimal';
     }
-
-    return ''; // Default (κανένα ειδικό χρώμα)
+    return '';
 }
 
 // --- UPDATED: Weather Box (Air, Ground, Humidity, Wind) ---
@@ -745,19 +710,27 @@ function createWeatherBox(label, value, unit) {
     let displayClass = 'weather-value';
     let colorClass = ''; 
 
+    // Έλεγχος για κενές τιμές
     if (value === null || value === undefined || isNaN(value)) {
         displayValue = '--';
         displayClass += ' no-data';
     } else {
+        // Εδώ καλούμε το format (π.χ. 1 δεκαδικό) αν θέλουμε, ή το αφήνουμε raw
+        displayValue = (typeof value === 'number') ? value.toFixed(1) : value;
         colorClass = getColorClass(label, value);
         if (colorClass) displayClass += ' ' + colorClass;
     }
 
     // --- 1. AIR TEMP (Θερμόμετρο) ---
     if (label === 'Air Temp') {
-        const minTemp = -5; const maxTemp = 45;
+        // ΔΥΝΑΜΙΚΑ ΟΡΙΑ: Αν είναι Fahrenheit, αλλάζουμε την κλίμακα
+        let minTemp = -5; 
+        let maxTemp = 45;
+        if (userUnits.temp === 'F') { minTemp = 23; maxTemp = 113; }
+
         let percent = ((value - minTemp) / (maxTemp - minTemp)) * 100;
         percent = Math.max(0, Math.min(100, percent));
+        
         return `
         <div class="weather-box">
             <div class="weather-label">${label}</div>
@@ -772,9 +745,14 @@ function createWeatherBox(label, value, unit) {
 
     // --- 2. GROUND TEMP (Θερμόμετρο Εδάφους) ---
     if (label === 'Ground Temp') {
-        const minTemp = -5; const maxTemp = 45;
+        // ΔΥΝΑΜΙΚΑ ΟΡΙΑ
+        let minTemp = -5; 
+        let maxTemp = 45;
+        if (userUnits.temp === 'F') { minTemp = 23; maxTemp = 113; }
+
         let percent = ((value - minTemp) / (maxTemp - minTemp)) * 100;
         percent = Math.max(0, Math.min(100, percent));
+        
         return `
         <div class="weather-box">
             <div class="weather-label">${label}</div>
@@ -814,10 +792,11 @@ function createWeatherBox(label, value, unit) {
 
     // --- 4. WIND SPEED (Ταχύμετρο - Gauge) ---
     if (label === 'Wind Speed') {
-        // Υπολογισμός Γωνίας: 0 έως 100 (μονάδες) -> -90 έως 90 μοίρες
-        // Αν η ταχύτητα είναι πάνω από 100, η βελόνα τερματίζει δεξιά (+90)
+        // ΔΥΝΑΜΙΚΑ ΟΡΙΑ: Αν είναι m/s, το max είναι 28 (περίπου 100km/h)
+        let maxSpeed = 100; 
+        if (userUnits.wind === 'ms') maxSpeed = 28;
+
         let safeValue = value || 0;
-        let maxSpeed = 100; // Ανώτατο όριο γραφικού
         
         // Τύπος: (Value / Max) * 180 - 90
         let rotation = (safeValue / maxSpeed) * 180 - 90;
@@ -893,8 +872,11 @@ function createWeatherBox(label, value, unit) {
 
     // --- 7. DEW POINT (Thermometer with Floating Drop) ---
     if (label === 'Dew Point') {
-        const minTemp = -5;
-        const maxTemp = 45;
+        // ΔΥΝΑΜΙΚΑ ΟΡΙΑ
+        let minTemp = -5; 
+        let maxTemp = 45;
+        if (userUnits.temp === 'F') { minTemp = 23; maxTemp = 113; }
+
         let percent = ((value - minTemp) / (maxTemp - minTemp)) * 100;
         percent = Math.max(0, Math.min(100, percent));
         
@@ -1350,6 +1332,10 @@ function deleteAccount() {
                         const r = await fetch('/api/delete_account', { method: 'DELETE' }); 
                         const j = await r.json(); 
                         if(j.success) {
+                            // --- ΠΡΟΣΘΗΚΗ: Επαναφορά ρυθμίσεων πριν την έξοδο ---
+                            localStorage.setItem('unit_temp', 'C');
+                            localStorage.setItem('unit_wind', 'kmh');
+                            // ----------------------------------------------------
                             window.location.href = "/"; 
                         } else {
                             setTimeout(() => showModal("Error", `<p>${j.error}</p>`, [{text:"OK"}]), 300); 
@@ -1501,6 +1487,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const sunIcon = "/static/img_icon/sun.png";
     const moonIcon = "/static/img_icon/moon.png";
 
+    initProfileSettings(); // <--- ΠΡΟΣΘΕΣΕ ΑΥΤΟ
+
     const header = document.querySelector('.dashboard-header');
 
     // Ασφάλεια: Αν δεν βρει το header (π.χ. σε άλλη σελίδα), να μην σκάσει λάθος
@@ -1589,29 +1577,50 @@ function setupBackToTop() {
 }
 
 // --- MY MOMENTS COLORING (Auto-Scan) ---
+// --- MY MOMENTS: COLORING & UNIT CONVERSION (Auto-Scan) ---
 function colorAllMoments() {
-    // 1. Βρες όλα τα κουτάκια που έχουν την κλάση 'weather-box'
+    // 1. Βρες όλα τα κουτάκια στη σελίδα
     const boxes = document.querySelectorAll('.weather-box');
 
+    // Οι μονάδες που προτιμά ο χρήστης
+    const tUnit = userUnits.temp === 'F' ? '°F' : '°C';
+    const wUnit = userUnits.wind === 'ms' ? 'm/s' : 'km/h';
+
     boxes.forEach(box => {
-        // 2. Βρες την ετικέτα (π.χ. "Air Temp") και την τιμή (π.χ. "25.4°C")
         const labelEl = box.querySelector('.weather-label');
         const valueEl = box.querySelector('.weather-value');
 
         if (labelEl && valueEl) {
             const label = labelEl.textContent.trim(); // π.χ. "Air Temp"
-            const text = valueEl.textContent.trim();  // π.χ. "12.5°C"
             
-            // 3. Μετατροπή κειμένου σε αριθμό (το parseFloat αγνοεί τα °C, %, κλπ)
-            const value = parseFloat(text);
+            // 2. Διάβασε την αρχική τιμή (που είναι πάντα Metric από τον Server)
+            // Η parseFloat σταματάει μόλις δει γράμματα, οπότε το "25.0°C" γίνεται 25.0
+            let value = parseFloat(valueEl.textContent.trim());
 
-            // Αν δεν είναι αριθμός (π.χ. "--"), προχώρα
+            // Αν δεν είναι αριθμός (π.χ. "--"), το αγνοούμε
             if (isNaN(value)) return;
 
-            // 4. Υπολογισμός χρώματος (χρησιμοποιούμε την ίδια συνάρτηση με το Dashboard!)
+            // 3. --- ΜΕΤΑΤΡΟΠΗ ΜΟΝΑΔΩΝ ---
+            
+            // Α. Θερμοκρασίες (Αν θέλουμε Fahrenheit)
+            if ((label.includes('Temp') || label.includes('Dew Point')) && userUnits.temp === 'F') {
+                value = (value * 9/5) + 32; // Μετατροπή C -> F
+                // Ενημέρωση του κειμένου στο HTML
+                valueEl.innerHTML = `${value.toFixed(1)}<span class="unit">${tUnit}</span>`;
+            }
+            
+            // Β. Άνεμος (Αν θέλουμε m/s)
+            if (label.includes('Wind Speed') && userUnits.wind === 'ms') {
+                value = value / 3.6; // Μετατροπή km/h -> m/s
+                // Ενημέρωση του κειμένου στο HTML
+                valueEl.innerHTML = `${value.toFixed(1)}<span class="unit">${wUnit}</span>`;
+            }
+
+            // 4. --- ΧΡΩΜΑΤΙΣΜΟΣ ---
+            // Περνάμε την (πιθανώς μετατρεπμένη) τιμή στο getColorClass
+            // Η getColorClass που φτιάξαμε πριν, ξέρει να τη διαχειριστεί σωστά!
             const colorClass = getColorClass(label, value);
 
-            // 5. Προσθήκη της κλάσης χρώματος
             if (colorClass) {
                 valueEl.classList.add(colorClass);
             }
@@ -1999,4 +2008,72 @@ function toggleHeaderMenu() {
         menu.classList.add('show');
         btn.classList.add('open');
     }
+}
+
+// --- INIT SETTINGS ON PROFILE PAGE ---
+function initProfileSettings() {
+    const tempRadios = document.getElementsByName('temp_unit');
+    const windRadios = document.getElementsByName('wind_unit');
+    
+    if(tempRadios.length > 0) {
+        tempRadios.forEach(r => { if(r.value === userUnits.temp) r.checked = true; });
+    }
+    if(windRadios.length > 0) {
+        windRadios.forEach(r => { if(r.value === userUnits.wind) r.checked = true; });
+    }
+}
+
+// --- SAVED MOMENTS CHART RENDERER ---
+// Καλέστε αυτή τη συνάρτηση από το my_moments.html για κάθε στιγμή
+function renderSavedMomentCharts(idSuffix, history) {
+    if (!history || history.length === 0) return;
+
+    // 1. Διάβασμα Μονάδων
+    const tUnit = userUnits.temp === 'F' ? '°F' : '°C';
+    const wUnit = userUnits.wind === 'ms' ? 'm/s' : 'km/h';
+
+    // 2. Η Λογική Προετοιμασίας (Μετατροπή + Στρογγυλοποίηση)
+    const prepareData = (key, converter) => history.map(row => {
+        // Υπολογισμός τιμής με conversion
+        let val = converter ? converter(getValue(row, key)) : getValue(row, key);
+        
+        // Στρογγυλοποίηση σε 1 δεκαδικό
+        if (typeof val === 'number') {
+            val = parseFloat(val.toFixed(1));
+        }
+        
+        return {
+            x: parseDate(row.Time).getTime(),
+            y: val
+        };
+    }).filter(p => p.x && !isNaN(p.y));
+
+    // 3. Ετοιμασία Δεδομένων για κάθε γράφημα
+    const tempSeries = [
+        { name: `Air (${tUnit})`, data: prepareData('Air Temperature', convertTemp) },
+        { name: `Ground (${tUnit})`, data: prepareData('Soil Temperature', convertTemp) }
+    ];
+    
+    const windSeries = [
+        { name: `Wind Speed (${wUnit})`, data: prepareData('WindSpeed', convertWind) }
+    ];
+    
+    const dewSeries = [
+        { name: `Dew Point (${tUnit})`, data: prepareData('DewPoint', convertTemp) }
+    ];
+
+    const config = getMobileChartConfig();
+    
+    // 4. Ζωγράφισμα Γραφημάτων (Χρησιμοποιώντας το suffix για μοναδικά IDs)
+    // Π.χ. αν το suffix είναι "_15", ψάχνει το div id="tempChart_15"
+    createChart('tempChart' + idSuffix, `Temperature (${tUnit})`, tempSeries, ['#FF4560', '#00E396'], config);
+    createChart('humidityChart' + idSuffix, 'Humidity (%)', [{name:'Humidity', data: prepareData('Humidity')}], ['#775DD0'], config);
+    createChart('pressureChart' + idSuffix, 'Pressure (hPa)', [{name:'Pressure', data: prepareData('Pressure')}], ['#546E7A'], config);
+    createChart('windspeedChart' + idSuffix, `Wind Speed (${wUnit})`, windSeries, ['#00D9E9'], config);
+    createChart('winddirectionChart' + idSuffix, 'Wind Direction (°)', [{name:'Wind Direction', data: prepareData('WindDirection')}], ['#FFB800'], config);
+    createChart('rainfallrateChart' + idSuffix, 'Rainfall', [
+        {name:'RainFall (mm)', data: prepareData('RainFall')},
+        {name:'RainRate (mm/h)', data: prepareData('RainRate')}
+    ], ['#008FFB', '#FEB019'], config);
+    createChart('dewpointChart' + idSuffix, `Dew Point (${tUnit})`, dewSeries, ['#8E44AD'], config);
 }
