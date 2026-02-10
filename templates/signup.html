@@ -34,6 +34,13 @@
                 pattern="[a-zA-Z0-9_.]+"
                 title="Characters allowed: (A-Z, a-z, 0-9, _, .)"
                 oninput="this.value = this.value.replace(/[^a-zA-Z0-9_.]/g, '')">
+
+            <input type="email" 
+                name="email" 
+                placeholder="Email Address" 
+                required
+                class="modal-input"
+                style="margin-bottom: 15px;">
             
             <div class="password-wrapper">
                 <input type="hidden" name="password" id="real-signup-pass">

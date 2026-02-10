@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Set New Password - Weather Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="{{ url_for('static', filename='img_icon/lock.ico') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=13">
+</head>
+<body>
+    <div class="dashboard-header">
+        <h1>Security</h1>
+        {% if not success %}
+        <a href="/login" class="control-btn">Back to Login</a>
+        {% endif %}
+    </div>
+
+    <div class="chart-card" style="max-width: 500px; margin: 3rem auto; text-align: center;">
+        
+        {% if success %}
+            <div style="padding: 20px;">
+                <img src="{{ url_for('static', filename='img_icon/check.png') }}" 
+                     alt="Success" 
+                     style="width: 80px; margin-bottom: 20px; opacity: 0.8;">
+                
+                <h2 style="color: #28a745; margin-bottom: 15px;">Password Changed!</h2>
+                
+                <p style="color: #666; margin-bottom: 30px; font-size: 1.1rem;">
+                    Your password has been updated successfully.<br>
+                    You can now close this window or return to login.
+                </p>
+                
+                <a href="/login" class="control-btn" style="background-color: #28a745; border-color: #28a745;">
+                    Go to Login
+                </a>
+            </div>
+
+        {% else %}
+            <h2 style="font-size: 1.5rem; margin-bottom: 1.5rem;">Set New Password</h2>
+            <p style="color: #666; margin-bottom: 25px;">
+                Please create a strong password for your account.
+            </p>
+
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    <div id="flash-message" style="background-color: #ffe6e6; color: #cc0000; padding: 1rem; border-radius: 12px; margin-bottom: 20px; border: 1px solid #ffcccc; font-size: 1rem;">
+                        {% for message in messages %} {{ message }} {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            <form method="POST" action="">
+                <div class="password-wrapper" style="margin-bottom: 15px;">
+                    <input type="password" id="password" name="password" placeholder="New Password" class="modal-input" required>
+                    <button type="button" class="password-toggle" onclick="togglePass('password', 'icon-1')">
+                        <img src="{{ url_for('static', filename='img_icon/show.png') }}" id="icon-1" class="password-icon" alt="Show">
+                    </button>
+                </div>
+
+                <div class="password-wrapper" style="margin-bottom: 25px;">
+                    <input type="password" id="confirm_password" name="confirm_password" placeholder="Confirm Password" class="modal-input" required>
+                    <button type="button" class="password-toggle" onclick="togglePass('confirm_password', 'icon-2')">
+                        <img src="{{ url_for('static', filename='img_icon/show.png') }}" id="icon-2" class="password-icon" alt="Show">
+                    </button>
+                </div>
+
+                <button type="submit" class="control-btn" style="width: 100%; padding: 15px; font-size: 1.1rem;">
+                    Update Password
+                </button>
+            </form>
+        {% endif %}
+    </div>
+
+    <script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+    <script>
+        function togglePass(inputId, iconId) {
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById(iconId);
+            if (input.type === "password") {
+                input.type = "text";
+                icon.src = "{{ url_for('static', filename='img_icon/hide.png') }}";
+            } else {
+                input.type = "password";
+                icon.src = "{{ url_for('static', filename='img_icon/show.png') }}";
+            }
+        }
+    </script>
+    
+    <button id="floating-theme-btn" class="action-btn" onclick="toggleTheme()" title="Toggle Theme">
+        <img src="{{ url_for('static', filename='img_icon/moon.png') }}" class="theme-icon" style="margin: 0; width: 24px; height: 24px;">
+    </button>
+</body>
+</html>

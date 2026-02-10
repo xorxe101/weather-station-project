@@ -1,7 +1,11 @@
 from flask import Flask, jsonify, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from flask_mail import Mail, Message
 from werkzeug.security import generate_password_hash, check_password_hash
+from itsdangerous import URLSafeTimedSerializer as Serializer
+from dotenv import load_dotenv
+from threading import Thread # <--- ΠΡΟΣΘΕΣΕ ΑΥΤΟ
 from datetime import datetime, timedelta
 import time, threading, json, os
 import pymysql, re
@@ -11,11 +15,23 @@ from sensor_reader import sensor_reader
 
 app = Flask(__name__)
 
+load_dotenv()
+
 # ==========================================
 # CONFIGURATION
 # ==========================================
 
-app.config['SECRET_KEY'] = 'weather-station-secret-key-98765'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')  # <--- ΒΑΛΕ ΕΔΩ ΤΟ ΔΙΚΟ ΣΟΥ ΜΥΣΤΙΚΟ ΚΛΕΙΔΙ (SECRET KEY) ή χρησιμοποίησε το .env για ασφάλεια
+
+# Ρυθμίσεις Gmail (ΠΡΟΣΟΧΗ: Θέλει App Password, όχι τον κανονικό κωδικό σου)
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = os.environ.get('EMAIL_USER')  # <--- ΒΑΛΕ ΤΟ EMAIL ΣΟΥ
+app.config['MAIL_PASSWORD'] = os.environ.get('EMAIL_PASS')     # <--- ΒΑΛΕ ΤΟ APP PASSWORD
+app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('EMAIL_USER')
+
+mail = Mail(app)
 
 # ---------------------------------------------------------
 # [CHANGE THIS] DATABASE CONFIGURATION FOR MARIADB
@@ -67,9 +83,36 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
     password = db.Column(db.String(150), nullable=False)
+    email = db.Column(db.String(120), unique=True) # <--- ΝΕΟ ΠΕΔΙΟ
     moments = db.relationship('SavedMoment', backref='user', lazy=True)
     temp_unit = db.Column(db.String(5), default='C')   # 'C' ή 'F'
     wind_unit = db.Column(db.String(5), default='kmh') # 'kmh' ή 'ms'
+
+    # 1. ΔΗΜΙΟΥΡΓΙΑ TOKEN (Που περιέχει και τον κωδικό)
+    def get_reset_token(self, expires_sec=1800):
+        s = Serializer(app.config['SECRET_KEY']) 
+        # Αποθηκεύουμε στο Token το ID αλλά ΚΑΙ τον τωρινό κωδικό (self.password)
+        return s.dumps({'user_id': self.id, 'sec': self.password}, salt='password-reset-salt')
+
+    # 2. ΕΠΑΛΗΘΕΥΣΗ TOKEN (Με έξτρα έλεγχο)
+    @staticmethod
+    def verify_reset_token(token):
+        s = Serializer(app.config['SECRET_KEY'])
+        try:
+            # Προσπαθούμε να διαβάσουμε το Token
+            data = s.loads(token, salt='password-reset-salt', max_age=1800)
+        except:
+            return None
+        
+        # Βρίσκουμε τον χρήστη
+        user = User.query.get(data['user_id'])
+        
+        # --- Ο ΕΞΤΡΑ ΕΛΕΓΧΟΣ ---
+        # Αν ο χρήστης δεν υπάρχει Ή αν ο κωδικός του έχει αλλάξει από τότε που βγήκε το Link:
+        if user is None or user.password != data['sec']:
+            return None # Το Link θεωρείται άκυρο!
+            
+        return user
 
 class SavedMoment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -146,6 +189,37 @@ def exact_interval_loop():
         if seconds_to_wait <= 0: seconds_to_wait = 60
         time.sleep(seconds_to_wait)
 
+# --- ΝΕΑ ΑΣΥΓΧΡΟΝΗ ΑΠΟΣΤΟΛΗ EMAIL ---
+
+# 1. Η συνάρτηση που τρέχει στο παρασκήνιο
+def send_async_email(app, msg):
+    with app.app_context():
+        try:
+            mail.send(msg)
+            print("✅ Email sent successfully via Thread!")
+        except Exception as e:
+            print(f"❌ Error sending email: {e}")
+
+# 2. Η συνάρτηση που καλείς εσύ
+def send_reset_email(user):
+    token = user.get_reset_token()
+    msg = Message('Password Reset Request',
+                  recipients=[user.email])
+    
+    link = url_for('reset_token', token=token, _external=True)
+    
+    msg.body = f'''To reset your password, visit the following link:
+{link}
+
+If you did not make this request then simply ignore this email.
+'''
+    
+    # ΕΔΩ ΕΙΝΑΙ Η ΜΑΓΕΙΑ:
+    # Αντί να το στείλουμε απευθείας, ξεκινάμε ένα Thread
+    # Περνάμε το 'app' γιατί το Thread δεν ξέρει τις ρυθμίσεις μας (config)
+    Thread(target=send_async_email, args=(app, msg)).start()
+# -------------------------------------------
+
 # ==========================================
 # FLASK ROUTES
 # ==========================================
@@ -155,6 +229,60 @@ def index():
     return render_template('index.html', current_user=current_user)
 
 # --- Authentication Routes ---
+
+# 1. Φόρμα που ζητάει το Email
+@app.route("/reset_password", methods=['GET', 'POST'])
+def reset_request():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+        
+    if request.method == 'POST':
+        email = request.form.get('email')
+        user = User.query.filter_by(email=email).first()
+        if user:
+            send_reset_email(user)
+            flash('Email sent! Check your inbox for the reset link', 'info')
+        else:
+            flash('No account found with that email', 'danger')
+            
+        # Είτε πετύχει είτε αποτύχει, γυρνάμε στο Login για να δει το μήνυμα
+        return redirect(url_for('login'))
+            
+    # Αν κάποιος προσπαθήσει να μπει με GET (απευθείας link), τον στέλνουμε στο login
+    return redirect(url_for('login'))
+
+
+# 2. Φόρμα που βάζεις τον ΝΕΟ κωδικό (αφού πατήσεις το link)
+@app.route("/reset_password/<token>", methods=['GET', 'POST'])
+def reset_token(token):
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+        
+    user = User.verify_reset_token(token)
+    if user is None:
+        flash('That is an invalid or expired token', 'warning')
+        return redirect(url_for('reset_request'))
+        
+    if request.method == 'POST':
+        # Εδώ χρησιμοποιείς τη logic που έχεις ήδη για hashing (π.χ. sha256 ή werkzeug)
+        # Υποθέτω ότι χρησιμοποιείς generate_password_hash όπως στο signup
+        from werkzeug.security import generate_password_hash # Βεβαιώσου ότι το έχεις κάνει import
+        
+        password = request.form.get('password')
+        confirm_password = request.form.get('confirm_password')
+
+        if password != confirm_password:
+             flash('Passwords do not match', 'danger')
+             return render_template('reset_token.html')
+
+        hashed_pw = generate_password_hash(password, method='sha256')
+        user.password = hashed_pw
+        db.session.commit()
+        
+        flash('Your password has been updated. You are now able to log in', 'success')
+        return render_template('reset_token.html', success=True)
+        
+    return render_template('reset_token.html', success=False)
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
