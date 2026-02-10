@@ -44,10 +44,10 @@ mail = Mail(app)
 # DATABASE CONFIGURATION (MariaDB)
 # ---------------------------------------------------------
 # Αντικαταστήστε αυτά με τα σωστά στοιχεία της MariaDB σας
-DB_USER = 'weather'      
-DB_PASS = 'station'      
-DB_HOST = 'localhost' 
-DB_NAME = 'Accounts'     
+DB_USER = os.environ.get('USER_DB')
+DB_PASS = os.environ.get('PASS_DB')
+DB_HOST = os.environ.get('HOST_DB')
+DB_NAME = os.environ.get('NAME_DB')
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
