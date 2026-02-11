@@ -2009,7 +2009,7 @@ button:focus, a:focus, input:focus, textarea:focus {
 }
 
 /* Βασικό στυλ για το εικονίδιο (Light Mode) */
-.prefpass-icon {
+.png-icon {
     width: 24px;
     height: 24px;
 }
