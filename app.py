@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, render_template, request, redirect, url_for, flash
+from flask import Flask, jsonify, render_template, request, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_mail import Mail, Message
@@ -7,8 +7,7 @@ from itsdangerous import URLSafeTimedSerializer as Serializer
 from dotenv import load_dotenv
 from threading import Thread # <--- ΠΡΟΣΘΕΣΕ ΑΥΤΟ
 from datetime import datetime, timedelta
-import time, threading, json, os
-import pymysql, re
+import pymysql, re, time, threading, json, os, random
 
 # Import your existing sensor reader
 from sensor_reader import sensor_reader
@@ -220,6 +219,19 @@ If you did not make this request then simply ignore this email.
     Thread(target=send_async_email, args=(app, msg)).start()
 # -------------------------------------------
 
+def send_verification_email(email, otp):
+    msg = Message('Weather Station - Email Verification', recipients=[email])
+    msg.body = f'''Welcome to Weather Station!
+
+To complete your registration, please enter the following code:
+
+{otp}
+
+If you did not request this code, please ignore this email.
+'''
+    # Στέλνουμε το email ασύγχρονα (όπως και πριν)
+    Thread(target=send_async_email, args=(app, msg)).start()
+
 # ==========================================
 # FLASK ROUTES
 # ==========================================
@@ -289,26 +301,74 @@ def signup():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
-        
-        # --- 1. ΕΛΕΓΧΟΣ ΜΟΡΦΗΣ USERNAME ---
-        # Επιτρέπονται: a-z, A-Z, 0-9, κάτω παύλα (_), τελεία (.)
-        if not re.match(r'^[a-zA-Z0-9_.]+$', username):
-            flash('Username can only contain letters, numbers, dots (.), and underscores (_).')
+        email = request.form.get('email') # Πλέον είναι υποχρεωτικό
+
+        # 1. ΕΛΕΓΧΟΣ: Το email είναι υποχρεωτικό
+        if not email or email.strip() == "":
+            flash('Email is required for verification.', 'danger')
             return redirect(url_for('signup'))
 
-        user = User.query.filter_by(username=username).first()
-        if user:
-            flash('Username already exists')
+        # 2. ΕΛΕΓΧΟΣ: Υπάρχει ήδη το Username ή το Email;
+        if User.query.filter_by(username=username).first():
+            flash('Username already exists.', 'danger')
             return redirect(url_for('signup'))
-        
-        new_user = User(username=username, password=generate_password_hash(password))
-        db.session.add(new_user)
-        db.session.commit()
-        
-        login_user(new_user)
-        return redirect(url_for('index'))
+
+        if User.query.filter_by(email=email).first():
+            flash('Email already exists.', 'danger')
+            return redirect(url_for('signup'))
+
+        # 3. ΔΗΜΙΟΥΡΓΙΑ OTP ΚΑΙ ΠΡΟΣΩΡΙΝΗ ΑΠΟΘΗΚΕΥΣΗ (SESSION)
+        otp = random.randint(100000, 999999) # 6ψήφιος κωδικός
+
+        # Αποθηκεύουμε τα στοιχεία στο session (όχι στη βάση ακόμα!)
+        session['temp_user'] = {
+            'username': username,
+            'email': email,
+            'password_hash': generate_password_hash(password, method='sha256'), # Κρυπτογραφούμε από τώρα
+            'otp': otp
+        }
+
+        # 4. ΑΠΟΣΤΟΛΗ EMAIL
+        send_verification_email(email, otp)
+
+        flash('A verification code has been sent to your email', 'info')
+        return redirect(url_for('verify_email'))
 
     return render_template('signup.html')
+
+@app.route('/verify_email', methods=['GET', 'POST'])
+def verify_email():
+    # Αν δεν υπάρχουν προσωρινά στοιχεία, διώξε τον χρήστη
+    if 'temp_user' not in session:
+        return redirect(url_for('signup'))
+
+    if request.method == 'POST':
+        user_otp = request.form.get('otp')
+        stored_otp = str(session['temp_user']['otp'])
+
+        # ΕΛΕΓΧΟΣ ΚΩΔΙΚΟΥ
+        if user_otp == stored_otp:
+            # ΕΠΙΤΥΧΙΑ! Τώρα γράφουμε στη βάση δεδομένων
+            data = session['temp_user']
+
+            new_user = User(
+                username=data['username'],
+                email=data['email'],
+                password=data['password_hash'] # Είναι ήδη hashed
+            )
+
+            db.session.add(new_user)
+            db.session.commit()
+
+            # Καθαρίζουμε το session
+            session.pop('temp_user', None)
+
+            flash('Account created successfully! You can now login', 'success')
+            return redirect(url_for('login'))
+        else:
+            flash('Invalid verification code. Please try again', 'danger')
+
+    return render_template('verify_email.html')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Verify Email - Weather Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="{{ url_for('static', filename='img_icon/lock.ico') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=13">
+    <style>
+        /* --- CSS ΓΙΑ ΤΟ CANCEL BUTTON --- */
+        /* Dark Mode: Σκούρο Γκρι (για να μη χτυπάει στο μάτι) */
+        body.dark-mode {
+            background-color: #3a3a3a !important;
+            color: #e0e0e0 !important;
+            border-color: #555 !important;
+        }
+        body.dark-mode {
+            background-color: #4a4a4a !important;
+        }
+
+        /* --- CSS ΓΙΑ ΤΟ PIN INPUT --- */
+        .otp-input {
+            text-align: center; 
+            letter-spacing: 12px; 
+            font-size: 1.8rem; 
+            font-weight: bold; 
+            padding: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-header">
+        <h1>Verification</h1>
+        <a href="/signup" class="control-btn">Cancel</a>
+    </div>
+
+    <div class="chart-card" style="max-width: 450px; margin: 1.5rem auto; text-align: center; padding: 40px 20px;">
+        
+        <div style="font-size: 3rem; margin-bottom: 15px;">📩</div>
+        
+        <h2 style="font-size: 1.6rem; margin-bottom: 10px;">Check your Inbox</h2>
+        
+        <p style="color: #888; margin-bottom: 30px; font-size: 1rem; line-height: 1.5;">
+            We've sent a 6-digit verification code to your email address.<br>
+            Please enter it below to complete your registration
+        </p>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div id="flash-message" class="alert alert-{{ category }}" 
+                         style="background-color: #ffe6e6; color: #cc0000; padding: 12px; border-radius: 10px; margin-bottom: 25px; border: 1px solid #ffcccc;">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="">
+            <div class="input-group" style="margin-bottom: 25px;">
+                <input type="text" 
+                       name="otp" 
+                       placeholder="______" 
+                       maxlength="6"
+                       required 
+                       class="modal-input otp-input" 
+                       autocomplete="off"
+                       oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+            </div>
+            
+            <button type="submit" class="control-btn" style="width: 100%; padding: 15px; font-size: 1.1rem; margin-bottom: 20px;">
+                Verify & Create Account
+            </button>
+        </form>
+
+        <p style="color: #666; font-size: 0.9em;">
+            Didn't receive the code? <br>
+            <a href="/signup" style="color: #0066cc; font-weight: bold; text-decoration: none;">Try registering again</a>
+        </p>
+    </div>
+
+    <script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+    <script>
+        setTimeout(function() {
+            var flash = document.getElementById('flash-message');
+            if (flash) { 
+                flash.style.transition = "opacity 0.5s ease"; 
+                flash.style.opacity = "0"; 
+                setTimeout(function(){ flash.remove(); }, 500); 
+            }
+        }, 4000);
+    </script>
+    
+    <button id="floating-theme-btn" class="action-btn" onclick="toggleTheme()" title="Toggle Theme">
+        <img src="{{ url_for('static', filename='img_icon/moon.png') }}" 
+            class="theme-icon" 
+            style="margin: 0; width: 24px; height: 24px;">
+    </button>
+</body>
+</html>
