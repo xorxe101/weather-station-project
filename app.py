@@ -305,16 +305,16 @@ def signup():
 
         # 1. ΕΛΕΓΧΟΣ: Το email είναι υποχρεωτικό
         if not email or email.strip() == "":
-            flash('Email is required for verification.', 'danger')
+            flash('Email is required for verification', 'danger')
             return redirect(url_for('signup'))
 
         # 2. ΕΛΕΓΧΟΣ: Υπάρχει ήδη το Username ή το Email;
         if User.query.filter_by(username=username).first():
-            flash('Username already exists.', 'danger')
+            flash('Username already exists', 'danger')
             return redirect(url_for('signup'))
 
         if User.query.filter_by(email=email).first():
-            flash('Email already exists.', 'danger')
+            flash('Email already exists', 'danger')
             return redirect(url_for('signup'))
 
         # 3. ΔΗΜΙΟΥΡΓΙΑ OTP ΚΑΙ ΠΡΟΣΩΡΙΝΗ ΑΠΟΘΗΚΕΥΣΗ (SESSION)
@@ -375,15 +375,24 @@ def login():
     if request.method == 'POST':
         if request.is_json:
             data = request.get_json()
-            username = data.get('username')
+            username = data.get('username') # ΧΩΡΙΣ .lower()
             password = data.get('password')
         else:
-            username = request.form.get('username')
+            username = request.form.get('username') # ΧΩΡΙΣ .lower()
             password = request.form.get('password')
 
         user = User.query.filter_by(username=username).first()
         
+        # --- ΑΥΣΤΗΡΟΣ ΕΛΕΓΧΟΣ ---
+        # 1. Βρήκαμε χρήστη;
+        # 2. Είναι ο κωδικός σωστός;
+        # 3. Είναι το username ΑΚΡΙΒΩΣ ίδιο; (π.χ. "Admin" == "Admin")
         if user and check_password_hash(user.password, password):
+            # Εξτρά έλεγχος Python γιατί η SQL μερικές φορές μπερδεύει τα κεφαλαία
+            if user.username != username:
+                flash('Invalid username or password')
+                return render_template('login.html')
+
             login_user(user)
             if request.is_json: return jsonify({"success": True})
             return redirect(url_for('index'))
