@@ -19,17 +19,29 @@
     </div>
 
     <div class="chart-card" style="max-width: 600px; margin: 1rem auto;">
-        <div style="text-align: center; margin-bottom: 1.5rem;">
+        <div style="text-align: center; margin-bottom: 1rem;">
             <img src="{{ url_for('static', filename='img_icon/user.png') }}" 
-                 style="width: 100px; height: 100px; border-radius: 50%; border: 4px solid #0066cc; object-fit: cover; margin-bottom: 1rem;">
-            <h2 style="margin: 0; color: #333; margin-bottom: 5px;">{{ current_user.username }}</h2>
-            <div style="margin-top: 15px;">
-                <a href="/logout" class="action-btn logout-btn" 
-                    onclick="localStorage.setItem('unit_temp', 'C'); localStorage.setItem('unit_wind', 'kmh');">
-                    Logout
-                </a>
+                 style="width: 110px; height: 110px; border-radius: 50%; border: 4px solid #0066cc; object-fit: cover; margin-bottom: 1rem; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+            
+            <h2 style="margin: 0; color: #333; font-size: 1.8rem;">{{ current_user.username }}</h2>
+        </div>
+
+        <div style="display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-bottom: 2rem;">
+
+            {% if current_user.username in ['Admin', 'admin'] %}
+                <div class="admin-label-static">
+                    Administrator
+                </div>
+            {% endif %}
+
+            <a href="/logout" class="action-btn logout-btn" 
+                onclick="localStorage.setItem('unit_temp', 'C'); localStorage.setItem('unit_wind', 'kmh');">
+                Logout
+            </a>
+
+            {% if current_user.username not in ['Admin', 'admin'] %}
                 <button onclick="deleteAccount()" class="action-btn delete-btn-main">Delete Account</button>
-            </div>
+            {% endif %}
         </div>
 
         <hr style="border: 0; border-top: 1px solid #eee; margin: 1rem 0;">

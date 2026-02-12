@@ -1327,15 +1327,33 @@ button:focus, a:focus, input:focus, textarea:focus {
     z-index: 2;
 }
 
-/* --- Το πίσω μέρος της βελόνας (η προέκταση) --- */
+/* --- Το πίσω μέρος της βελόνας (η προέκταση με την τελεία) --- */
 .compass-needle::before {
     content: '';
     position: absolute;
-    top: 100%; /* Ξεκινάει ακριβώς εκεί που τελειώνει η βάση */
-    left: 0;
-    width: 2px;   /* Το ίδιο πάχος */
-    height: 140%; /* Το ίδιο μήκος προς την αντίθετη κατεύθυνση */
-    background: #ff3333; 
+    top: 100%; /* Ξεκινάει ακριβώς από το κέντρο */
+    left: 50%; 
+    transform: translateX(-50%); /* Το κεντράρουμε γιατί θα είναι πιο πλατύ από τη βελόνα */
+    
+    width: 8px;   /* Το πλάτος της τελείας */
+    height: 140%; /* Το συνολικό μήκος της ουράς */
+    
+    /* ΕΔΩ ΕΙΝΑΙ ΤΟ ΚΟΛΠΟ: */
+    /* Ζωγραφίζουμε 2 πράγματα στο background: 
+       1. Μια κάθετη γραμμή (linear-gradient)
+       2. Έναν κύκλο στο κάτω μέρος (radial-gradient) */
+    background: 
+        linear-gradient(#ff3333, #ff3333), /* Η Γραμμή */
+        radial-gradient(circle at bottom, #ff3333 3.5px, transparent 4px); /* Η Τελεία */
+    
+    /* Ορίζουμε το μέγεθος για το καθένα: */
+    /* Η γραμμή θα είναι 2px πλάτος και θα σταματάει λίγο πριν το τέλος */
+    /* Η τελεία πιάνει όλο το πλάτος κάτω */
+    background-size: 2px calc(100% - 4px), 100% 100%;
+    
+    /* Τοποθέτηση: Η γραμμή πάνω-κέντρο, η τελεία κάτω-κέντρο */
+    background-position: top center, bottom center;
+    background-repeat: no-repeat;
 }
 
 /* Η μύτη του βέλους (φτιαγμένη με CSS τρίγωνο) */
@@ -2012,4 +2030,75 @@ button:focus, a:focus, input:focus, textarea:focus {
 .png-icon {
     width: 24px;
     height: 24px;
+}
+
+/* --- SYSTEM HEALTH WIDGET (ADMIN ONLY) --- */
+.health-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.health-item {
+    background: rgba(0,0,0,0.03);
+    padding: 15px;
+    border-radius: 12px;
+    text-align: center;
+    border: 1px solid rgba(0,0,0,0.05);
+}
+
+.health-label {
+    font-size: 0.8rem;
+    color: #666;
+    margin-bottom: 5px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.health-value {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+/* Μπάρα Προόδου */
+.progress-bg {
+    width: 100%;
+    height: 6px;
+    background: #e0e0e0;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: #28a745; /* Πράσινο αρχικά */
+    width: 0%;
+    transition: width 0.5s ease, background-color 0.5s ease;
+}
+
+/* Χρώματα ανάλογα το φόρτο */
+.progress-fill.high { background: #ff9800; } /* Πορτοκαλί */
+.progress-fill.critical { background: #dc3545; } /* Κόκκινο */
+
+/* --- ΝΕΟ ADMIN LABEL STYLE (Σαν το Logout αλλά στατικό) --- */
+.admin-label-static {
+    /* 1. Βασικά στυλ κουμπιού (από .action-btn) */
+    display: inline-block;
+    padding: 10px 20px;
+    margin: 5px;
+    border-radius: 50px; /* Στρογγυλεμένες άκρες */
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-decoration: none;
+    
+    background: #a700c5; /* Έντονο Ροζ-Μοβ */
+    color: white;
+    box-shadow: 0 4px 15px rgba(213, 0, 249, 0.3); /* Η ροζ λάμψη */
+    
+    /* 3. Το κάνουμε στατικό (όχι χεράκι, όχι κλικ) */
+    cursor: default;
+    box-shadow: none;   /* Χωρίς σκιές για πιο flat look */
 }

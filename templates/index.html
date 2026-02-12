@@ -46,7 +46,7 @@
                          style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid #0066cc; object-fit: cover; cursor: pointer; transition: transform 0.2s;">
                 </a>
                 
-                <span class="welcome-text">Welcome <strong>{{ current_user.username }}</strong></span>
+                <span class="welcome-text">Welcome, <strong>{{ current_user.username }}</strong></span>
                 
                 <button class="control-btn" onclick="saveCurrentMoment()" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
                     <img src="{{ url_for('static', filename='img_icon/save.png') }}" 
@@ -101,6 +101,146 @@
     <div class="chart-card"><div class="chart-container" id="rainfallrateChart"></div></div>
     <div class="chart-card"><div class="chart-container" id="dewpointChart"></div></div>
   </div>
+
+  {% if current_user.is_authenticated and current_user.username in ['Admin', 'admin'] %}
+    <div class="chart-card" style="margin-top: 30px; border-left: 5px solid #0066cc;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin: 0; display: flex; align-items: center;">
+                <img src="{{ url_for('static', filename='img_icon/tools.png') }}" 
+                    class="icon-invert" alt="System"
+                    style="width: 28px; height: 28px; margin-right: 10px;"> System Health
+            </h3>
+            <span style="font-size: 0.8rem;">Admin View Only</span>
+        </div>
+
+        <div class="health-grid">
+            <div class="health-item">
+                <div class="health-label">CPU Load</div>
+                <div class="health-value" id="sys-cpu">--%</div>
+                <div class="progress-bg"><div class="progress-fill" id="bar-cpu"></div></div>
+            </div>
+
+            <div class="health-item">
+                <div class="health-label">RAM Usage</div>
+                <div class="health-value" id="sys-ram">--%</div>
+                <div class="progress-bg"><div class="progress-fill" id="bar-ram"></div></div>
+                <small style="font-size: 0.7rem; color: #888;" id="sys-ram-det">-- / -- GB</small>
+            </div>
+
+            <div class="health-item">
+                <div class="health-label">Disk Space</div>
+                <div class="health-value" id="sys-disk">--%</div>
+                <div class="progress-bg"><div class="progress-fill" id="bar-disk"></div></div>
+            </div>
+
+            <div class="health-item">
+                <div class="health-label">CPU Temp</div>
+                <div class="health-value" id="sys-temp">--°C</div>
+                <div class="progress-bg"><div class="progress-fill" id="bar-temp"></div></div>
+            </div>
+
+            <div class="health-item">
+                <div class="health-label">Swap Mem</div>
+                <div class="health-value" id="sys-swap">--%</div>
+                <div class="progress-bg"><div class="progress-fill" id="bar-swap"></div></div>
+            </div>
+
+            <div class="health-item">
+                <div class="health-label">Processes</div>
+                <div class="health-value" id="sys-proc">--</div>
+                <small style="font-size: 0.7rem; color: #888;">Active Tasks</small>
+            </div>
+
+            <div class="health-item">
+                <div class="health-label">Network (MB)</div>
+                <div class="health-value" style="font-size: 1rem;">
+                    <span style="color: #28a745;">⬇️ <span id="net-recv">--</span></span>
+                </div>
+                <div class="health-value" style="font-size: 1rem;">
+                    <span style="color: #007bff;">⬆️ <span id="net-sent">--</span></span>
+                </div>
+            </div>
+
+            <div class="health-item">
+                <div class="health-label">DB Size</div>
+                <div class="health-value" id="db-size">-- MB</div>
+                 <div class="progress-bg"><div class="progress-fill" id="bar-db"></div></div>
+            </div>
+            
+            <div class="health-item" style="grid-column: 1 / -1;">
+                <div class="health-label">System Uptime</div>
+                <div class="health-value" id="sys-uptime" style="font-size: 1rem; color: #0066cc;">Calculating...</div>
+            </div>
+        </div>
+    </div>
+    <script>
+        function updateSystemHealth() {
+            fetch('/api/system_health')
+                .then(response => {
+                    if (response.status === 403) return null; // Not admin
+                    return response.json();
+                })
+                .then(data => {
+                    if (!data) return;
+
+                    // CPU
+                    document.getElementById('sys-cpu').innerText = data.cpu + '%';
+                    updateBar('bar-cpu', data.cpu);
+
+                    // RAM
+                    document.getElementById('sys-ram').innerText = data.ram_percent + '%';
+                    document.getElementById('sys-ram-det').innerText = data.ram_used + ' / ' + data.ram_total + ' GB';
+                    updateBar('bar-ram', data.ram_percent);
+
+                    // Disk
+                    document.getElementById('sys-disk').innerText = data.disk_percent + '%';
+                    updateBar('bar-disk', data.disk_percent);
+
+                    // Temp
+                    document.getElementById('sys-temp').innerText = data.temp + '°C';
+                    // Υποθέτουμε max temp 85 βαθμούς για το Pi
+                    let tempPercent = (data.temp / 85) * 100;
+                    updateBar('bar-temp', tempPercent);
+
+                    // Swap
+                    document.getElementById('sys-swap').innerText = data.swap_percent + '%';
+                    updateBar('bar-swap', data.swap_percent);
+
+                    // Processes
+                    document.getElementById('sys-proc').innerText = data.processes;
+
+                    // Network
+                    document.getElementById('net-recv').innerText = data.net_recv;
+                    document.getElementById('net-sent').innerText = data.net_sent;
+
+                    // Database Size
+                    document.getElementById('db-size').innerText = data.db_size + ' MB';
+                    // Μπορείς να αλλάξεις το 500 σε ό,τι όριο θες
+                    let dbPercent = (data.db_size / 500) * 100; 
+                    if (dbPercent > 100) dbPercent = 100;
+                    updateBar('bar-db', dbPercent);
+
+                    // Uptime
+                    document.getElementById('sys-uptime').innerText = data.uptime;
+                })
+                .catch(err => console.error("Health Check Failed", err));
+        }
+
+        function updateBar(id, percent) {
+            const bar = document.getElementById(id);
+            bar.style.width = percent + '%';
+            
+            // Χρώματα ανάλογα το φόρτο
+            bar.className = 'progress-fill'; // Reset
+            if (percent > 85) bar.classList.add('critical');
+            else if (percent > 60) bar.classList.add('high');
+        }
+
+        // Τρέξ' το μία φορά τώρα και μετά κάθε 2 δευτερόλεπτα
+        updateSystemHealth();
+        setInterval(updateSystemHealth, 2000);
+    </script>
+  {% endif %}
 
   <div class="last-update">
       Auto-refresh: <span id="refreshStatus">Enabled</span><br>

@@ -3,3 +3,4 @@ sensor_history.json
 token
 instance/
 .env
+create_admin.py

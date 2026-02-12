@@ -1,3 +1,4 @@
+from sqlalchemy import text
 from flask import Flask, jsonify, render_template, request, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
@@ -7,7 +8,7 @@ from itsdangerous import URLSafeTimedSerializer as Serializer
 from dotenv import load_dotenv
 from threading import Thread # <--- ΠΡΟΣΘΕΣΕ ΑΥΤΟ
 from datetime import datetime, timedelta
-import pymysql, re, time, threading, json, os, random
+import pymysql, re, time, threading, json, os, random, psutil, platform
 
 # Import your existing sensor reader
 from sensor_reader import sensor_reader
@@ -47,6 +48,9 @@ DB_USER = os.environ.get('USER_DB')
 DB_PASS = os.environ.get('PASS_DB')
 DB_HOST = os.environ.get('HOST_DB')
 DB_NAME = os.environ.get('NAME_DB')
+
+# Λίστα με τους Διαχειριστές (Username)
+ADMIN_USERS = ['Admin', 'admin'] # <--- ΒΑΛΕ ΤΟ USERNAME ΣΟΥ ΕΔΩ
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
@@ -556,6 +560,79 @@ def get_history_hours(hours):
 @app.route('/api/config')
 def get_config():
     return jsonify({'reading_interval_minutes': READING_INTERVAL_MINUTES})
+
+@app.route('/api/system_health')
+@login_required
+def system_health():
+    # SECURITY CHECK: Μόνο οι Admins βλέπουν αυτά τα data
+    if current_user.username not in ADMIN_USERS:
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    # 1. CPU Usage
+    cpu = psutil.cpu_percent(interval=None)
+
+    # 2. RAM Usage
+    ram = psutil.virtual_memory()
+
+    # 3. Disk Usage
+    disk = psutil.disk_usage('/')
+
+    # 4. SWAP Memory
+    swap = psutil.swap_memory()
+    
+    # 5. Αριθμός Διεργασιών (Processes)
+    process_count = len(psutil.pids())
+    
+    # 6. Network Traffic (Συνολικά MB από το boot)
+    net = psutil.net_io_counters()
+    sent_mb = round(net.bytes_sent / (1024 * 1024), 1) # Convert to MB
+    recv_mb = round(net.bytes_recv / (1024 * 1024), 1) # Convert to MB
+
+    # 7. Temperature (Μόνο για Raspberry Pi Linux)
+    temp = "N/A"
+    try:
+        with open("/sys/class/thermal/thermal_zone0/temp", "r") as f:
+            temp = round(int(f.read()) / 1000, 1)
+    except:
+        temp = 0 # Σε Windows ή αν αποτύχει
+
+    # 2. Database Size (MB) - SQL Query για MySQL/MariaDB
+    db_size = 0
+    try:
+        query = text("""
+            SELECT table_schema AS "Database", 
+            ROUND(SUM(data_length + index_length) / 1024 / 1024, 2) AS "Size" 
+            FROM information_schema.TABLES 
+            WHERE table_schema = :dbname 
+            GROUP BY table_schema
+        """)
+        # Αντικατέστησε το 'weather_db' με το όνομα της βάσης σου αν διαφέρει
+        result = db.session.execute(query, {'dbname': DB_NAME}).fetchone()
+        if result:
+            db_size = result[1] # Παίρνουμε το μέγεθος
+    except Exception as e:
+        print(f"DB Size Error: {e}")
+        db_size = "N/A"
+
+    # 8. Uptime
+    boot_time = datetime.fromtimestamp(psutil.boot_time())
+    uptime = datetime.now() - boot_time
+    uptime_str = str(uptime).split('.')[0] # "5 days, 10:20:30"
+
+    return jsonify({
+        'cpu': cpu,
+        'ram_percent': ram.percent,
+        'ram_used': round(ram.used / (1024**3), 2), # GB
+        'ram_total': round(ram.total / (1024**3), 2), # GB
+        'disk_percent': disk.percent,
+        'temp': temp,
+        'uptime': uptime_str,
+        'swap_percent': swap.percent,
+        'processes': process_count,
+        'net_sent': sent_mb,
+        'net_recv': recv_mb,
+        'db_size': db_size
+    })
 
 
 # ---------------------------------------------------------

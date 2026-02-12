@@ -59,43 +59,42 @@
             background: transparent !important;
         }
         
-        /* --- HEADER FIXES (ΤΕΛΙΚΗ ΔΙΟΡΘΩΣΗ) --- */
+        /* --- HEADER LAYOUT --- */
         .dashboard-header {
             max-width: 100%;
             overflow: hidden;
-            display: flex;       /* Σιγουρεύουμε ότι είναι flex */
-            align-items: center; /* Κεντράρισμα στον κάθετο άξονα */
-            gap: 15px;           /* Κενό ανάμεσα σε τίτλο και κουμπί */
-        }
-
-        .dashboard-header h1 {
-            white-space: nowrap;     
-            overflow: hidden;        
-            text-overflow: ellipsis; 
-            min-width: 0;            
-            /*flex: 1;*/                 
-            margin: 0; /* Αφαιρούμε margins για να δουλέψει το gap */
+            display: flex;       
+            align-items: center; 
+            gap: 15px;           
         }
 
         .dashboard-header .control-btn {
-            flex-shrink: 0;       /* ΜΗΝ ΣΥΡΡΙΚΝΩΝΕΣΑΙ! */
-            white-space: nowrap;  /* ΜΗΝ ΣΠΑΣ ΤΟ ΚΕΙΜΕΝΟ! */
+            flex-shrink: 0;       
+            white-space: nowrap;  
         }
 
-        /* Mobile Fixes & Header Responsive */
+        /* --- ΕΞΥΠΝΟΣ ΤΙΤΛΟΣ (HYBRID) --- */
+        .dashboard-header h1 {
+            white-space: nowrap;
+            overflow: hidden;
+            min-width: 0;
+            margin: 0;
+            
+            /* DEFAULT (Desktop): Κλασικές τελίτσες (...) */
+            text-overflow: ellipsis; 
+            
+            /* Απενεργοποίηση μάσκας από default */
+            -webkit-mask-image: none;
+            mask-image: none;
+        }
+
+        /* --- MOBILE ONLY STYLES (< 600px) --- */
         @media screen and (max-width: 600px) {
             .dashboard-header {
-                flex-direction: column; /* Κάθετη διάταξη σε μικρά κινητά */
-                align-items: stretch;   /* Να πιάνουν όλο το πλάτος */
+                flex-direction: column; /* Κάθετα */
+                align-items: stretch;
                 text-align: center;
                 gap: 15px;
-            }
-
-            .dashboard-header h1 {
-                font-size: 1.5rem;
-                width: 100%;
-                white-space: normal; /* Στα πολύ μικρά, ας σπάει ο τίτλος αν θέλει */
-                overflow: visible;
             }
 
             .dashboard-header .control-btn {
@@ -103,13 +102,22 @@
                 text-align: center;
             }
 
-            .charts-wrapper {
-                grid-template-columns: 1fr; 
-                gap: 15px;
+            /* ΕΔΩ ΕΝΕΡΓΟΠΟΙΕΙΤΑΙ ΤΟ FADE OUT ΜΟΝΟ ΓΙΑ ΚΙΝΗΤΑ */
+            .dashboard-header h1 {
+                font-size: 1.5rem;
+                width: 100%;
+                
+                /* 1. Σβήνουμε τις τελίτσες */
+                text-overflow: clip; 
+                
+                /* 2. Ενεργοποιούμε το Fade Out */
+                /* Μαύρο = ορατό, Transparent = αόρατο. Το Fade ξεκινάει στο 80% του πλάτους */
+                -webkit-mask-image: linear-gradient(to right, black 80%, transparent 100%);
+                mask-image: linear-gradient(to right, black 80%, transparent 100%);
             }
-            .chart-card {
-                padding: 15px;
-            }
+            
+            .charts-wrapper { grid-template-columns: 1fr; gap: 15px; }
+            .chart-card { padding: 15px; }
         }
     </style>
 </head>
