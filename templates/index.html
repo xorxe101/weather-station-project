@@ -103,7 +103,7 @@
   </div>
 
   {% if current_user.is_authenticated and current_user.username in ['Admin', 'admin'] %}
-    <div class="chart-card" style="margin-top: 30px; border-left: 5px solid #0066cc;">
+    <div class="chart-card" style="margin-top: 30px;">
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <h3 style="margin: 0; display: flex; align-items: center;">
                 <img src="{{ url_for('static', filename='img_icon/tools.png') }}" 
@@ -171,6 +171,31 @@
                 <div class="health-label">System Uptime</div>
                 <div class="health-value" id="sys-uptime" style="font-size: 1rem; color: #0066cc;">Calculating...</div>
             </div>
+        </div>
+        <h3 style="margin-bottom: 15px; display: flex; align-items: center; justify-content: center; gap: 10px;">
+            {% if camera_active %}
+                <span style="color: #dc3545; font-size: 1.2rem;">●</span> Live Feed
+            {% else %}
+                <span style="color: #6c757d; font-size: 1.2rem;">●</span> Camera Offline
+            {% endif %}
+        </h3>
+        <div style="overflow: hidden; border-radius: 10px;">
+            {% if camera_active %}
+                <img src="{{ url_for('video_feed') }}" 
+                    style="width: 100%; max-width: 640px; display: block; border-radius: 8px; border: 2px solid #333; margin: 0 auto;">
+            {% else %}
+                <div class="camera-placeholder">
+                    
+                    <img src="{{ url_for('static', filename='img_icon/videocam_off.png') }}" 
+                        alt="Offline" 
+                        class="offline-img icon-invert">
+                    
+                    <h4 style="margin: 0; font-weight: 600;">Stream Unavailable</h4>
+                    <p style="margin-top: 5px; font-size: 0.9rem; max-width: 80%;">
+                        The camera is currently disabled by the administrator
+                    </p>
+                </div>
+            {% endif %}
         </div>
     </div>
     <script>

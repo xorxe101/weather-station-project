@@ -2102,3 +2102,29 @@ button:focus, a:focus, input:focus, textarea:focus {
     cursor: default;
     box-shadow: none;   /* Χωρίς σκιές για πιο flat look */
 }
+
+/* --- CAMERA OFFLINE PLACEHOLDER STYLE --- */
+
+/* 1. Βασικό Στυλ (LIGHT MODE) */
+.camera-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 320px; /* Σταθερό ύψος */
+    border-radius: 12px;
+    
+    /* Χρώματα για την ημέρα (Light Mode) */
+    background-color: #f0f2f5; /* Απαλό γκρι */
+    border: 2px dashed #ccc;   /* Διακεκομμένο περίγραμμα */
+    color: #666;               /* Σκούρα γκρι γράμματα */
+}
+
+/* 3. Η εικόνα Offline */
+.offline-img {
+    width: 80px; 
+    height: 80px; 
+    margin-bottom: 15px;
+    opacity: 0.6;
+    transition: transform 0.3s ease;
+}

@@ -589,3 +589,11 @@ h3 {
     /* Βεβαιωνόμαστε ότι τα γράμματα είναι λευκά */
     color: #ffffff !important;
 }
+
+/* 2. Στυλ για DARK MODE */
+.camera-placeholder {
+    /* Χρώματα για τη νύχτα */
+    background-color: #1a1a1a; /* Σχεδόν μαύρο */
+    border: 2px dashed #444;   /* Σκούρο περίγραμμα */
+    color: #bbb;               /* Ανοιχτά γκρι γράμματα */
+}

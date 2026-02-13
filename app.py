@@ -1,5 +1,5 @@
 from sqlalchemy import text
-from flask import Flask, jsonify, render_template, request, redirect, url_for, flash, session
+from flask import Flask, jsonify, render_template, request, redirect, url_for, flash, session, Response
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_mail import Mail, Message
@@ -8,7 +8,7 @@ from itsdangerous import URLSafeTimedSerializer as Serializer
 from dotenv import load_dotenv
 from threading import Thread # <--- ΠΡΟΣΘΕΣΕ ΑΥΤΟ
 from datetime import datetime, timedelta
-import pymysql, re, time, threading, json, os, random, psutil, platform
+import pymysql, re, time, threading, json, os, random, psutil, platform, cv2, threading
 
 # Import your existing sensor reader
 from sensor_reader import sensor_reader
@@ -192,6 +192,85 @@ def exact_interval_loop():
         if seconds_to_wait <= 0: seconds_to_wait = 60
         time.sleep(seconds_to_wait)
 
+# --- ΡΥΘΜΙΣΕΙΣ ΚΑΜΕΡΑΣ (GLOBAL VARIABLES) ---
+outputFrame = None
+lock = threading.Lock()
+camera_thread = None
+CAMERA_ACTIVE = os.environ.get('CAMERA_STATUS') # Διαβάζουμε από το .env αν η κάμερα είναι ενεργή ή όχι
+
+# Αυτή η συνάρτηση τρέχει στο παρασκήνιο (Background Thread)
+# Ανοίγει την κάμερα ΜΙΑ φορά και ανανεώνει συνεχώς τη μεταβλητή outputFrame
+def capture_frames():
+    global outputFrame, lock
+
+    if not CAMERA_ACTIVE:
+        print("🔕 Camera is disabled via config.")
+        return
+    
+    # 0 για USB WebCam. Αν δεν δουλεύει, δοκίμασε -1 ή 1
+    camera = cv2.VideoCapture(0) 
+    
+    # Ρύθμιση ανάλυσης (Χαμηλώνουμε λίγο για ταχύτητα στο Pi)
+    camera.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+    camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+
+    while CAMERA_ACTIVE:
+        success, frame = camera.read()
+        if not success:
+            time.sleep(0.1)
+            continue
+
+        # Κωδικοποίηση της εικόνας
+        ret, buffer = cv2.imencode('.jpg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), 70])
+        encoded_frame = buffer.tobytes()
+
+        # Κλειδώνουμε τη μεταβλητή για να γράψουμε με ασφάλεια
+        with lock:
+            outputFrame = encoded_frame
+        
+        # Μικρή καθυστέρηση για να μην καίμε CPU (περίπου 30 FPS)
+        time.sleep(0.03)
+    
+    camera.release()
+    print("🛑 Camera stopped.")
+
+# Αυτή η συνάρτηση ξεκινά το thread ΜΟΝΟ αν δεν τρέχει ήδη
+def start_camera_thread():
+    global camera_thread, CAMERA_ACTIVE
+    # 1. Πρώτα ελέγχουμε αν επιτρέπεται η κάμερα
+    if not CAMERA_ACTIVE:
+        print("🔕 Camera is disabled in config. Thread NOT started.")
+        return # Σταματάμε εδώ, δεν δημιουργούμε καν το thread
+
+    # 2. Αν επιτρέπεται, τότε το ξεκινάμε
+    if camera_thread is None:
+        camera_thread = threading.Thread(target=capture_frames)
+        camera_thread.daemon = True
+        camera_thread.start()
+        print("📸 Camera Background Thread Started!")
+
+# Καλλούμε την εκκίνηση του thread
+# (Σημείωση: Στο Flask μπορεί να κληθεί 2 φορές στο reload, δεν πειράζει λόγω του ελέγχου if)
+start_camera_thread()
+
+# Αυτή η συνάρτηση στέλνει την εικόνα στον Browser
+def generate():
+    global outputFrame, lock
+    while True:
+        # Κλειδώνουμε για να διαβάσουμε
+        with lock:
+            if outputFrame is None:
+                continue
+            # Παίρνουμε αντίγραφο των δεδομένων
+            current_frame = outputFrame
+
+        # Στέλνουμε το frame
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + current_frame + b'\r\n')
+        
+        # Καθυστέρηση για τον client
+        time.sleep(0.05)
+
 # --- ΝΕΑ ΑΣΥΓΧΡΟΝΗ ΑΠΟΣΤΟΛΗ EMAIL ---
 
 # 1. Η συνάρτηση που τρέχει στο παρασκήνιο
@@ -242,7 +321,7 @@ If you did not request this code, please ignore this email.
 
 @app.route('/')
 def index():
-    return render_template('index.html', current_user=current_user)
+    return render_template('index.html', current_user=current_user, camera_active=CAMERA_ACTIVE)
 
 # --- Authentication Routes ---
 
@@ -468,6 +547,15 @@ def delete_account():
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
+    
+@app.route('/video_feed')
+def video_feed():
+    if not CAMERA_ACTIVE:
+        # Αν η κάμερα είναι κλειστή, στείλε μια κενή απάντηση ή μια εικόνα placeholder
+        # Εδώ στέλνουμε μια απλή εικόνα placeholder (προαιρετικά)
+        return "Camera is OFF", 404
+
+    return Response(generate(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 # --- Saved Moments Routes ---
 
