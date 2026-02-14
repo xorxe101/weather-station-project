@@ -181,8 +181,8 @@
         </h3>
         <div style="overflow: hidden; border-radius: 10px;">
             {% if camera_active %}
-                <img src="{{ url_for('video_feed') }}" 
-                    style="width: 100%; max-width: 640px; display: block; border-radius: 8px; border: 2px solid #333; margin: 0 auto;">
+                <img id="live-cam" src="{{ url_for('video_feed') }}" 
+                    style="width: 100%; max-width: 640px; display: block; border-radius: 10px; border: 2px solid #333; margin: 0 auto;">
             {% else %}
                 <div class="camera-placeholder">
                     
@@ -259,6 +259,43 @@
             bar.className = 'progress-fill'; // Reset
             if (percent > 85) bar.classList.add('critical');
             else if (percent > 60) bar.classList.add('high');
+        }
+
+        const cam = document.getElementById('live-cam');
+
+        // Συνάρτηση που ξαναφορτώνει την κάμερα "με το ζόρι"
+        function reloadCamera() {
+            if (cam) {
+                console.log("🔄 Αναγκαστική επανεκκίνηση ροής...");
+                // Προσθέτουμε τυχαίο αριθμό στο τέλος για να ξεγελάσουμε τον browser
+                // ότι είναι "νέα" εικόνα και να ανοίξει νέα σύνδεση
+                let baseUrl = "{{ url_for('video_feed') }}";
+                cam.src = baseUrl + "?t=" + new Date().getTime();
+            }
+        }
+
+        // 1. ΑΝΙΧΝΕΥΣΗ ΑΛΛΑΓΗΣ ΔΙΚΤΥΟΥ (Το κλειδί για το πρόβλημά σου)
+        // Αυτό τρέχει μόλις το κινητό βρει ξανά ίντερνετ (π.χ. μετά από αλλαγή WiFi/4G)
+        window.addEventListener('online', function() {
+            console.log("🌐 Το δίκτυο επανήλθε! Επανασύνδεση...");
+            setTimeout(reloadCamera, 500); // Περιμένουμε μισό δευτερόλεπτο να σταθεροποιηθεί
+        });
+
+        // 2. ΑΦΥΠΝΙΣΗ (Όταν ξαναμπαίνεις στο Tab)
+        document.addEventListener("visibilitychange", function() {
+            if (document.visibilityState === 'visible') {
+                console.log("👁️ Το Tab ενεργοποιήθηκε.");
+                reloadCamera();
+            }
+        });
+
+        // 3. ΠΡΟΣΤΑΣΙΑ ΑΠΟ ΣΦΑΛΜΑΤΑ (Watchdog)
+        // Αν η ροή κοπεί για οποιονδήποτε λόγο, ξαναπροσπάθησε μόνος σου
+        if (cam) {
+            cam.onerror = function() {
+                console.log("❌ Η ροή κόπηκε. Προσπάθεια σε 2 δευτερόλεπτα...");
+                setTimeout(reloadCamera, 2000);
+            };
         }
 
         // Τρέξ' το μία φορά τώρα και μετά κάθε 2 δευτερόλεπτα

@@ -196,43 +196,53 @@ def exact_interval_loop():
 outputFrame = None
 lock = threading.Lock()
 camera_thread = None
-CAMERA_ACTIVE = os.environ.get('CAMERA_STATUS') # Διαβάζουμε από το .env αν η κάμερα είναι ενεργή ή όχι
+CAMERA_ACTIVE = os.environ.get('CAMERA_STATUS').lower() == 'true' # Διαβάζουμε από το .env αν η κάμερα είναι ενεργή ή όχι
+FPS = 24  # Καρέ ανά δευτερόλεπτο (μπορείς να το αυξήσεις αν θέλεις πιο ομαλή ροή, αλλά θα ζορίσει το Pi)
+FRAME_DELAY = 1 / FPS
+
+# Μετρητής συνδεδεμένων χρηστών
+active_clients = 0
 
 # Αυτή η συνάρτηση τρέχει στο παρασκήνιο (Background Thread)
 # Ανοίγει την κάμερα ΜΙΑ φορά και ανανεώνει συνεχώς τη μεταβλητή outputFrame
 def capture_frames():
-    global outputFrame, lock
-
-    if not CAMERA_ACTIVE:
-        print("🔕 Camera is disabled via config.")
-        return
+    global outputFrame, lock, active_clients
     
-    # 0 για USB WebCam. Αν δεν δουλεύει, δοκίμασε -1 ή 1
-    camera = cv2.VideoCapture(0) 
+    camera = None
     
-    # Ρύθμιση ανάλυσης (Χαμηλώνουμε λίγο για ταχύτητα στο Pi)
-    camera.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-    camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+    while True:
+        # ΕΛΕΓΧΟΣ: Υπάρχει κανείς που να βλέπει;
+        if active_clients > 0:
+            
+            # Αν χρειάζεται κάμερα αλλά είναι κλειστή, άνοιξέ την
+            if camera is None:
+                print("👀 User connected. Starting Camera...")
+                camera = cv2.VideoCapture(0)
+                # Ρυθμίσεις για να μην ζορίζεται το Pi
+                camera.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+                camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+                time.sleep(2.0) # Χρόνος για να ζεσταθεί ο αισθητήρας
 
-    while CAMERA_ACTIVE:
-        success, frame = camera.read()
-        if not success:
-            time.sleep(0.1)
-            continue
+            success, frame = camera.read()
+            if success:
+                ret, buffer = cv2.imencode('.jpg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), 70])
+                with lock:
+                    outputFrame = buffer.tobytes()
+            else:
+                time.sleep(0.1)
+            
+            # Κανονική ροή, κοιμήσου για λίγο πριν το επόμενο frame
+            time.sleep(FRAME_DELAY)
 
-        # Κωδικοποίηση της εικόνας
-        ret, buffer = cv2.imencode('.jpg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), 70])
-        encoded_frame = buffer.tobytes()
-
-        # Κλειδώνουμε τη μεταβλητή για να γράψουμε με ασφάλεια
-        with lock:
-            outputFrame = encoded_frame
-        
-        # Μικρή καθυστέρηση για να μην καίμε CPU (περίπου 30 FPS)
-        time.sleep(0.03)
-    
-    camera.release()
-    print("🛑 Camera stopped.")
+        else:
+            # Αν ΔΕΝ υπάρχει κανείς (active_clients == 0)
+            if camera is not None:
+                print("💤 No users. Stopping Camera to save power...")
+                camera.release()
+                camera = None # Καθαρίζουμε τη μεταβλητή
+            
+            # Κοιμήσου για 1 δευτερόλεπτο και ξαναέλεγξε
+            time.sleep(1.0)
 
 # Αυτή η συνάρτηση ξεκινά το thread ΜΟΝΟ αν δεν τρέχει ήδη
 def start_camera_thread():
@@ -255,21 +265,34 @@ start_camera_thread()
 
 # Αυτή η συνάρτηση στέλνει την εικόνα στον Browser
 def generate():
-    global outputFrame, lock
-    while True:
-        # Κλειδώνουμε για να διαβάσουμε
-        with lock:
-            if outputFrame is None:
-                continue
-            # Παίρνουμε αντίγραφο των δεδομένων
-            current_frame = outputFrame
-
-        # Στέλνουμε το frame
-        yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' + current_frame + b'\r\n')
+    global active_clients, outputFrame, lock
+    
+    # 1. Νέος πελάτης συνδέθηκε -> Αυξάνουμε τον μετρητή
+    with lock:
+        active_clients += 1
+    
+    try:
+        while True:
+            with lock:
+                if outputFrame is None:
+                    continue
+                current_frame = outputFrame
+            
+            yield (b'--frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + current_frame + b'\r\n')
+            time.sleep(FRAME_DELAY)
+            
+    except GeneratorExit:
+        # Αυτό συμβαίνει όταν ο πελάτης κλείνει το tab
+        pass
         
-        # Καθυστέρηση για τον client
-        time.sleep(0.05)
+    finally:
+        # 2. Ο πελάτης έφυγε -> Μειώνουμε τον μετρητή
+        # Το 'finally' τρέχει ΠΑΝΤΑ, είτε βγει κανονικά είτε πέσει η σύνδεση
+        with lock:
+            active_clients -= 1
+            # Ασφάλεια: Να μην πάει αρνητικό
+            if active_clients < 0: active_clients = 0
 
 # --- ΝΕΑ ΑΣΥΓΧΡΟΝΗ ΑΠΟΣΤΟΛΗ EMAIL ---
 
