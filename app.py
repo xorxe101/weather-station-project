@@ -151,7 +151,7 @@ outputFrame = None
 lock = threading.Lock()
 camera_thread = None
 CAMERA_ACTIVE = os.environ.get('CAMERA_STATUS').lower() == 'true' # Διαβάζουμε από το .env αν η κάμερα είναι ενεργή ή όχι
-FPS = 5  # Καρέ ανά δευτερόλεπτο (μπορείς να το αυξήσεις αν θέλεις πιο ομαλή ροή, αλλά θα ζορίσει το Pi)
+FPS = int(os.environ.get('FPS_SETTINGS', 10)) # Μπορείς να ρυθμίσεις τα FPS από το .env, default είναι 10
 FRAME_DELAY = 1 / FPS
 
 # Μετρητής συνδεδεμένων χρηστών
