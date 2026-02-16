@@ -2087,3 +2087,18 @@ function renderSavedMomentCharts(idSuffix, history) {
     ], ['#008FFB', '#FEB019'], config);
     createChart('dewpointChart' + idSuffix, `Dew Point (${tUnit})`, dewSeries, ['#8E44AD'], config);
 }
+
+// --- KEEP SCROLL POSITION ON REFRESH ---
+
+// 1. Πριν φύγουμε από τη σελίδα (refresh/link), αποθηκεύουμε τη θέση του scroll
+window.addEventListener('beforeunload', function() {
+    localStorage.setItem('sidebarScroll', window.scrollY);
+});
+
+// 2. Μόλις φορτώσει η σελίδα, διαβάζουμε τη θέση και πηγαίνουμε εκεί
+document.addEventListener("DOMContentLoaded", function() {
+    var scrollPos = localStorage.getItem('sidebarScroll');
+    if (scrollPos) {
+        window.scrollTo(0, parseInt(scrollPos));
+    }
+});

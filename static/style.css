@@ -1023,7 +1023,6 @@ button:focus, a:focus, input:focus, textarea:focus {
     transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); /* Ωραίο εφέ "πετάγματος" */
     min-width: 250px;
     max-width: 400px;
-    border-left: 5px solid #333; /* Χρωματιστή γραμμή αριστερά */
 }
 
 /* Κατάσταση Εμφάνισης */
