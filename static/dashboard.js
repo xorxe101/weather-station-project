@@ -1428,41 +1428,51 @@ function disableDarkMode() {
 }
 
 // 2. Ενημέρωσε τη συνάρτηση toggleTheme (αντικατάστησέ την ή πρόσθεσε τη γραμμή)
-// --- UPDATED TOGGLE THEME FUNCTION ---
-function toggleTheme() {
-    const currentTheme = localStorage.getItem('theme');
-    
-    // Εικόνες
-    const sunIcon = "/static/img_icon/sun.png";
-    const moonIcon = "/static/img_icon/moon.png";
+// --- AUTOMATIC THEME BASED ON DEVICE TIME ---
+function autoThemeByTime() {
+    const now = new Date();
+    const hour = now.getHours(); 
 
-    if (currentTheme === 'dark') {
-        // --- ΓΥΡΙΣΜΑ ΣΕ LIGHT MODE ---
+    // Μέρα: 07:00 - 19:00
+    const isDayTime = hour >= 7 && hour < 19;
+
+    if (isDayTime) {
+        // --- LIGHT MODE ---
         disableDarkMode();
         localStorage.setItem('theme', 'light');
-        
-        // Αλλαγή ΟΛΩΝ των εικονιδίων σε Φεγγάρι (για να πατήσεις και να πας σε Dark)
-        document.querySelectorAll('.theme-icon').forEach(icon => {
-            icon.src = moonIcon;
-        });
-        
-        updateChartsTheme('light');
-        updateTrashIcons('light'); 
+
+        // Ενημέρωση γραφημάτων (αν υπάρχουν)
+        if (typeof updateChartsTheme === "function") updateChartsTheme('light');
+        if (typeof updateTrashIcons === "function") updateTrashIcons('light');
+
+        console.log(`☀️ Ώρα ${hour}:00 - Auto Light Mode`);
 
     } else {
-        // --- ΓΥΡΙΣΜΑ ΣΕ DARK MODE ---
+        // --- DARK MODE ---
         enableDarkMode();
         localStorage.setItem('theme', 'dark');
-        
-        // Αλλαγή ΟΛΩΝ των εικονιδίων σε Ήλιο (για να πατήσεις και να πας σε Light)
-        document.querySelectorAll('.theme-icon').forEach(icon => {
-            icon.src = sunIcon;
-        });
 
-        updateChartsTheme('dark');
-        updateTrashIcons('dark');
+        // Ενημέρωση γραφημάτων (αν υπάρχουν)
+        if (typeof updateChartsTheme === "function") updateChartsTheme('dark');
+        if (typeof updateTrashIcons === "function") updateTrashIcons('dark');
+
+        console.log(`🌙 Ώρα ${hour}:00 - Auto Dark Mode`);
     }
 }
+
+// Εκκίνηση
+document.addEventListener("DOMContentLoaded", autoThemeByTime);
+setInterval(autoThemeByTime, 60000); // Έλεγχος κάθε λεπτό
+
+// --- ΕΝΕΡΓΟΠΟΙΗΣΗ ---
+
+// 1. Τρέξε τον έλεγχο μόλις φορτώσει η σελίδα
+document.addEventListener("DOMContentLoaded", function() {
+    autoThemeByTime();
+});
+
+// 2. Τρέξε τον έλεγχο κάθε 1 λεπτό (ώστε αν νυχτώσει όσο κοιτάει ο χρήστης, να αλλάξει μόνο του)
+setInterval(autoThemeByTime, 60000);
 
 // 4. Helper για τα γραφήματα (αν υπάρχουν στη σελίδα)
 function updateChartsTheme(mode) {
