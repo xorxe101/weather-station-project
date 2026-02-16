@@ -1,29 +1,35 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Verify Email - Weather Dashboard</title>
+    <title>Verify Email - Weather Forecast</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="{{ url_for('static', filename='img_icon/lock.ico') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=13">
     <style>
-        /* --- CSS ΓΙΑ ΤΟ CANCEL BUTTON --- */
-        /* Dark Mode: Σκούρο Γκρι (για να μη χτυπάει στο μάτι) */
-        body.dark-mode {
-            background-color: #3a3a3a !important;
-            color: #e0e0e0 !important;
-            border-color: #555 !important;
-        }
-        body.dark-mode {
-            background-color: #4a4a4a !important;
-        }
-
-        /* --- CSS ΓΙΑ ΤΟ PIN INPUT --- */
         .otp-input {
             text-align: center; 
             letter-spacing: 12px; 
             font-size: 1.8rem; 
             font-weight: bold; 
             padding: 15px;
+        }
+        .timer-container {
+            font-size: 1rem;
+            color: #666;
+            margin-top: 15px;
+            font-weight: 500;
+        }
+        .timer-value {
+            color: #d9534f;
+            font-weight: bold;
+        }
+        .resend-btn {
+            background-color: #f0ad4e; /* Πορτοκαλί για το Resend */
+            color: white;
+            border: none;
+        }
+        .resend-btn:hover {
+            background-color: #ec971f;
         }
     </style>
 </head>
@@ -39,25 +45,29 @@
         
         <h2 style="font-size: 1.6rem; margin-bottom: 10px;">Check your Inbox</h2>
         
-        <p style="color: #888; margin-bottom: 30px; font-size: 1rem; line-height: 1.5;">
-            We've sent a 6-digit verification code to your email address.<br>
-            Please enter it below to complete your registration
+        <p style="color: #888; margin-bottom: 20px; font-size: 1rem; line-height: 1.5;">
+            Please enter the code we sent to your email.
         </p>
+
+        <div class="timer-container" id="timer-box">
+            Code expires in: <span id="time" class="timer-value">--:--</span>
+        </div>
 
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
                     <div id="flash-message" class="alert alert-{{ category }}" 
-                         style="background-color: #ffe6e6; color: #cc0000; padding: 12px; border-radius: 10px; margin-bottom: 25px; border: 1px solid #ffcccc;">
+                         style="background-color: #ffe6e6; color: #cc0000; padding: 12px; border-radius: 10px; margin-top: 20px; margin-bottom: 25px; border: 1px solid #ffcccc;">
                         {{ message }}
                     </div>
                 {% endfor %}
             {% endif %}
         {% endwith %}
 
-        <form method="POST" action="">
+        <form method="POST" action="" style="margin-top: 25px;" id="verifyForm">
             <div class="input-group" style="margin-bottom: 25px;">
                 <input type="text" 
+                       id="otpInput"
                        name="otp" 
                        placeholder="______" 
                        maxlength="6"
@@ -67,19 +77,71 @@
                        oninput="this.value = this.value.replace(/[^0-9]/g, '')">
             </div>
             
-            <button type="submit" class="control-btn" style="width: 100%; padding: 15px; font-size: 1.1rem; margin-bottom: 20px;">
+            <button type="submit" id="submitBtn" class="control-btn" style="width: 100%; padding: 15px; font-size: 1.1rem; margin-bottom: 20px;">
                 Verify & Create Account
             </button>
         </form>
 
-        <p style="color: #666; font-size: 0.9em;">
-            Didn't receive the code? <br>
-            <a href="/signup" style="color: #0066cc; font-weight: bold; text-decoration: none;">Try registering again</a>
+        <div id="resendContainer" style="display: none; margin-top: 25px;">
+            <a href="{{ url_for('resend_verification_code') }}" class="control-btn resend-btn" style="width: 100%; display: block; padding: 15px; font-size: 1.1rem; text-decoration: none; box-sizing: border-box;">
+                Request New Code
+            </a>
+        </div>
+
+        <p style="color: #666; font-size: 0.9em; margin-top: 20px;">
+            Didn't receive it? <br>
+            <a href="{{ url_for('resend_verification_code') }}" style="color: #0066cc; font-weight: bold; text-decoration: none;">Resend Email</a>
         </p>
     </div>
 
     <script src="{{ url_for('static', filename='dashboard.js') }}"></script>
     <script>
+        var timeLeft = {{ remaining_seconds }}; 
+        var timerDisplay = document.getElementById('time');
+        
+        var verifyForm = document.getElementById('verifyForm');
+        var resendContainer = document.getElementById('resendContainer');
+        var timerBox = document.getElementById('timer-box');
+        var otpInput = document.getElementById('otpInput');
+
+        function startTimer(duration) {
+            var timer = duration, minutes, seconds;
+            
+            var intervalId = setInterval(function () {
+                minutes = parseInt(timer / 60, 10);
+                seconds = parseInt(timer % 60, 10);
+
+                minutes = minutes < 10 ? "0" + minutes : minutes;
+                seconds = seconds < 10 ? "0" + seconds : seconds;
+
+                timerDisplay.textContent = minutes + ":" + seconds;
+
+                if (--timer < 0) {
+                    clearInterval(intervalId);
+                    // ΟΤΑΝ ΛΗΞΕΙ Ο ΧΡΟΝΟΣ:
+                    timerDisplay.textContent = "EXPIRED";
+                    timerBox.style.color = "red";
+                    
+                    // 1. Κρύβουμε τη φόρμα Verify
+                    verifyForm.style.display = "none";
+                    
+                    // 2. Εμφανίζουμε το κουμπί Resend
+                    resendContainer.style.display = "block";
+                }
+            }, 1000);
+        }
+
+        if (timeLeft > 0) {
+            startTimer(timeLeft);
+        } else {
+            // Αν έχει ήδη λήξει κατά το φόρτωμα
+            timerDisplay.textContent = "EXPIRED";
+            timerBox.style.color = "red";
+            verifyForm.style.display = "none";
+            resendContainer.style.display = "block";
+        }
+
+        // Auto-hide flash messages
         setTimeout(function() {
             var flash = document.getElementById('flash-message');
             if (flash) { 

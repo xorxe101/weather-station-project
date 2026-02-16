@@ -415,19 +415,20 @@ def reset_token(token):
         
     return render_template('reset_token.html', success=False)
 
+# --- ΡΥΘΜΙΣΗ ΧΡΟΝΟΥ OTP (Στην αρχή του αρχείου ή μαζί με τα configs) ---
+OTP_VALIDITY_SECONDS = 300  # 5 Λεπτά
+
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
-        email = request.form.get('email') # Πλέον είναι υποχρεωτικό
+        email = request.form.get('email')
 
-        # 1. ΕΛΕΓΧΟΣ: Το email είναι υποχρεωτικό
         if not email or email.strip() == "":
             flash('Email is required for verification', 'danger')
             return redirect(url_for('signup'))
 
-        # 2. ΕΛΕΓΧΟΣ: Υπάρχει ήδη το Username ή το Email;
         if User.query.filter_by(username=username).first():
             flash('Username already exists', 'danger')
             return redirect(url_for('signup'))
@@ -436,18 +437,18 @@ def signup():
             flash('Email already exists', 'danger')
             return redirect(url_for('signup'))
 
-        # 3. ΔΗΜΙΟΥΡΓΙΑ OTP ΚΑΙ ΠΡΟΣΩΡΙΝΗ ΑΠΟΘΗΚΕΥΣΗ (SESSION)
-        otp = random.randint(100000, 999999) # 6ψήφιος κωδικός
+        # ΔΗΜΙΟΥΡΓΙΑ OTP
+        otp = random.randint(100000, 999999)
 
-        # Αποθηκεύουμε τα στοιχεία στο session (όχι στη βάση ακόμα!)
+        # Αποθηκεύουμε στο session ΚΑΙ την ώρα δημιουργίας (time.time())
         session['temp_user'] = {
             'username': username,
             'email': email,
-            'password_hash': generate_password_hash(password, method='sha256'), # Κρυπτογραφούμε από τώρα
-            'otp': otp
+            'password_hash': generate_password_hash(password, method='sha256'),
+            'otp': otp,
+            'otp_timestamp': time.time()  # <--- ΣΗΜΑΝΤΙΚΟ: Αποθήκευση ώρας
         }
 
-        # 4. ΑΠΟΣΤΟΛΗ EMAIL
         send_verification_email(email, otp)
 
         flash('A verification code has been sent to your email', 'info')
@@ -457,37 +458,63 @@ def signup():
 
 @app.route('/verify_email', methods=['GET', 'POST'])
 def verify_email():
-    # Αν δεν υπάρχουν προσωρινά στοιχεία, διώξε τον χρήστη
     if 'temp_user' not in session:
         return redirect(url_for('signup'))
 
+    # ΥΠΟΛΟΓΙΣΜΟΣ ΥΠΟΛΕΙΠΟΜΕΝΟΥ ΧΡΟΝΟΥ (Για το Frontend)
+    current_time = time.time()
+    start_time = session['temp_user'].get('otp_timestamp', 0)
+    elapsed_time = current_time - start_time
+    remaining_seconds = max(0, OTP_VALIDITY_SECONDS - int(elapsed_time))
+
     if request.method == 'POST':
+        # 1. ΕΛΕΓΧΟΣ ΧΡΟΝΟΥ (Backend Security)
+        if elapsed_time > OTP_VALIDITY_SECONDS:
+            flash('Verification code expired. Please request a new one.', 'danger')
+            # session.pop('temp_user', None) # Καθαρισμός
+            return redirect(url_for('verify_email')) # Απλά κάνε refresh για να δει το κουμπί Resend
+
         user_otp = request.form.get('otp')
         stored_otp = str(session['temp_user']['otp'])
 
-        # ΕΛΕΓΧΟΣ ΚΩΔΙΚΟΥ
         if user_otp == stored_otp:
-            # ΕΠΙΤΥΧΙΑ! Τώρα γράφουμε στη βάση δεδομένων
             data = session['temp_user']
-
             new_user = User(
                 username=data['username'],
                 email=data['email'],
-                password=data['password_hash'] # Είναι ήδη hashed
+                password=data['password_hash']
             )
-
             db.session.add(new_user)
             db.session.commit()
-
-            # Καθαρίζουμε το session
             session.pop('temp_user', None)
-
             flash('Account created successfully! You can now login', 'success')
             return redirect(url_for('login'))
         else:
             flash('Invalid verification code. Please try again', 'danger')
 
-    return render_template('verify_email.html')
+    # Περνάμε το remaining_seconds στο HTML
+    return render_template('verify_email.html', remaining_seconds=remaining_seconds)
+
+@app.route('/resend_verification_code')
+def resend_verification_code():
+    if 'temp_user' not in session:
+        flash('Session expired. Please register again.', 'danger')
+        return redirect(url_for('signup'))
+    
+    # 1. Δημιουργία ΝΕΟΥ κωδικού
+    new_otp = random.randint(100000, 999999)
+    
+    # 2. Ενημέρωση του Session (κρατάμε τα στοιχεία, αλλάζουμε OTP και ώρα)
+    session['temp_user']['otp'] = new_otp
+    session['temp_user']['otp_timestamp'] = time.time()
+    session.modified = True # Σημαντικό για να καταλάβει το Flask ότι άλλαξε το dict
+    
+    # 3. Αποστολή Email
+    email = session['temp_user']['email']
+    send_verification_email(email, new_otp)
+    
+    flash('A new verification code has been sent!', 'success')
+    return redirect(url_for('verify_email'))
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():

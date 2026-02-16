@@ -1,10 +1,60 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Set New Password - Weather Dashboard</title>
+    <title>Set New Password - Weather Forecast</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="{{ url_for('static', filename='img_icon/lock.ico') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=13">
+    <style>
+        /* --- CSS ΑΚΡΙΒΩΣ ΟΠΩΣ ΣΤΟ LOGIN --- */
+        
+        .fade-in {
+            animation: fadeIn 0.4s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .password-wrapper {
+            position: relative;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .password-wrapper .modal-input {
+            width: 100%;
+            padding-right: 45px;
+            box-sizing: border-box;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            outline: none;
+            z-index: 10;
+        }
+
+        .password-icon {
+            width: 24px;
+            height: 24px;
+            opacity: 0.6;
+            transition: opacity 0.3s;
+        }
+
+        .password-toggle:hover .password-icon {
+            opacity: 1;
+        }
+    </style>
 </head>
 <body>
     <div class="dashboard-header">
@@ -14,10 +64,10 @@
         {% endif %}
     </div>
 
-    <div class="chart-card" style="max-width: 500px; margin: 3rem auto; text-align: center;">
+    <div class="chart-card fade-in" style="max-width: 500px; margin: 3rem auto; text-align: center;">
         
         {% if success %}
-            <div style="padding: 20px;">
+            <div style="padding: 20px;" class="fade-in">
                 <img src="{{ url_for('static', filename='img_icon/check.png') }}" 
                      alt="Success" 
                      style="width: 80px; margin-bottom: 20px; opacity: 0.8;">
@@ -26,10 +76,10 @@
                 
                 <p style="color: #666; margin-bottom: 30px; font-size: 1.1rem;">
                     Your password has been updated successfully.<br>
-                    You can now close this window or return to login.
+                    You can now return to login
                 </p>
                 
-                <a href="/login" class="control-btn" style="background-color: #28a745; border-color: #28a745;">
+                <a href="/login" class="control-btn" style="width: 100%; display: inline-block; box-sizing: border-box;">
                     Go to Login
                 </a>
             </div>
@@ -42,24 +92,41 @@
 
             {% with messages = get_flashed_messages() %}
                 {% if messages %}
-                    <div id="flash-message" style="background-color: #ffe6e6; color: #cc0000; padding: 1rem; border-radius: 12px; margin-bottom: 20px; border: 1px solid #ffcccc; font-size: 1rem;">
+                    <div id="flash-message" style="background-color: #ffe6e6; color: #cc0000; padding: 1rem; border-radius: 12px; margin-bottom: 20px; border: 1px solid #ffcccc; font-size: 1rem;" class="fade-in">
                         {% for message in messages %} {{ message }} {% endfor %}
                     </div>
                 {% endif %}
             {% endwith %}
 
             <form method="POST" action="">
-                <div class="password-wrapper" style="margin-bottom: 15px;">
-                    <input type="password" id="password" name="password" placeholder="New Password" class="modal-input" required>
-                    <button type="button" class="password-toggle" onclick="togglePass('password', 'icon-1')">
-                        <img src="{{ url_for('static', filename='img_icon/show.png') }}" id="icon-1" class="password-icon" alt="Show">
+                
+                <div class="password-wrapper">
+                    <input type="hidden" name="password" id="real-pass">
+                    
+                    <input type="text" 
+                           id="visible-pass" 
+                           placeholder="New Password" 
+                           class="modal-input" 
+                           autocomplete="off"
+                           required>
+                    
+                    <button type="button" class="password-toggle" id="toggle-btn-1">
+                        <img src="{{ url_for('static', filename='img_icon/show.png') }}" class="password-icon" alt="Show Password">
                     </button>
                 </div>
 
-                <div class="password-wrapper" style="margin-bottom: 25px;">
-                    <input type="password" id="confirm_password" name="confirm_password" placeholder="Confirm Password" class="modal-input" required>
-                    <button type="button" class="password-toggle" onclick="togglePass('confirm_password', 'icon-2')">
-                        <img src="{{ url_for('static', filename='img_icon/show.png') }}" id="icon-2" class="password-icon" alt="Show">
+                <div class="password-wrapper">
+                    <input type="hidden" name="confirm_password" id="real-confirm">
+                    
+                    <input type="text" 
+                           id="visible-confirm" 
+                           placeholder="Confirm Password" 
+                           class="modal-input" 
+                           autocomplete="off"
+                           required>
+                    
+                    <button type="button" class="password-toggle" id="toggle-btn-2">
+                        <img src="{{ url_for('static', filename='img_icon/show.png') }}" class="password-icon" alt="Show Password">
                     </button>
                 </div>
 
@@ -72,17 +139,43 @@
 
     <script src="{{ url_for('static', filename='dashboard.js') }}"></script>
     <script>
-        function togglePass(inputId, iconId) {
-            const input = document.getElementById(inputId);
-            const icon = document.getElementById(iconId);
-            if (input.type === "password") {
-                input.type = "text";
-                icon.src = "{{ url_for('static', filename='img_icon/hide.png') }}";
+        // Ενεργοποίηση της Mobile Password λειτουργίας (όπως στο Login)
+        document.addEventListener("DOMContentLoaded", function() {
+            // Έλεγχος αν υπάρχει η συνάρτηση στο dashboard.js
+            if (typeof initMobilePassword === "function") {
+                
+                // 1. Ενεργοποίηση για το New Password
+                if(document.getElementById('visible-pass')) {
+                    initMobilePassword(
+                        'visible-pass', 
+                        'real-pass', 
+                        document.getElementById('toggle-btn-1')
+                    );
+                }
+
+                // 2. Ενεργοποίηση για το Confirm Password
+                if(document.getElementById('visible-confirm')) {
+                    initMobilePassword(
+                        'visible-confirm', 
+                        'real-confirm', 
+                        document.getElementById('toggle-btn-2')
+                    );
+                }
+
             } else {
-                input.type = "password";
-                icon.src = "{{ url_for('static', filename='img_icon/show.png') }}";
+                console.error("Η συνάρτηση initMobilePassword δεν βρέθηκε στο dashboard.js!");
             }
-        }
+        });
+
+        // Auto-hide flash messages
+        setTimeout(function() {
+            var flash = document.getElementById('flash-message');
+            if (flash) { 
+                flash.style.transition = "opacity 0.5s ease"; 
+                flash.style.opacity = "0"; 
+                setTimeout(function(){ flash.remove(); }, 500); 
+            }
+        }, 3000);
     </script>
 </body>
 </html>
