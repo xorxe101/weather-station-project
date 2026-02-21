@@ -280,10 +280,16 @@ def generate():
     
     try:
         while True:
+            current_frame = None
+            # Μπαίνουμε στο lock ΜΟΝΟ για να διαβάσουμε, και βγαίνουμε αμέσως
             with lock:
-                if outputFrame is None:
-                    continue
-                current_frame = outputFrame
+                if outputFrame is not None:
+                    current_frame = outputFrame
+            
+            # Αν η κάμερα δεν έχει στείλει ακόμα εικόνα (ζεσταίνεται)
+            if current_frame is None:
+                time.sleep(0.1)  # <--- Η ΛΥΣΗ: Ξεκουράζουμε τον επεξεργαστή για 1/10 του δευτερολέπτου
+                continue
             
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + current_frame + b'\r\n')

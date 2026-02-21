@@ -140,6 +140,49 @@ h1 {
     padding: 8px 20px;
     backdrop-filter: blur(5px);
     margin: 0; /* Αφαιρούμε τυχόν αυτόματα margins */
+
+    /* --- Η ΜΑΓΕΙΑ ΓΙΑ ΤΟ SCROLL --- */
+    max-width: 100%; /* Για να μην ξεχειλίζει την οθόνη στα κινητά */
+    overflow-x: auto; /* Επιτρέπει το σκρολάρισμα οριζόντια */
+    overflow-y: hidden; /* Κρύβει το κάθετο σκρολ */
+    flex-wrap: nowrap; /* Απαγορεύει στα στοιχεία να πέσουν στην από κάτω γραμμή */
+    min-width: 0; /* Σημαντικό για να δουλέψει σωστά το overflow σε flexbox */
+    
+    /* Κρύβουμε την άσχημη μπάρα κύλισης (Scrollbar) για πιο καθαρό look */
+    scrollbar-width: none; /* Για Firefox */
+    -ms-overflow-style: none; /* Για IE/Edge */
+    
+    /* ΕΦΕ 2: Ενεργοποίηση ομαλής κίνησης */
+    scroll-behavior: smooth;
+}
+
+/* Κρύβουμε τη μπάρα */
+.user-controls::-webkit-scrollbar {
+    display: none;
+}
+
+.user-controls > * {
+    flex-shrink: 0 !important; /* Αποφυγή συρρίκνωσης των στοιχείων */
+}
+
+/* --- ΔΥΝΑΜΙΚΑ FADE EFFECTS ΓΙΑ ΤΟ SCROLL --- */
+
+/* Σβήνει ΜΟΝΟ προς τα δεξιά (Όταν είμαστε τέρμα αριστερά) */
+.mask-right {
+    -webkit-mask-image: linear-gradient(to right, black 0%, black calc(100% - 10px), transparent 100%);
+    mask-image: linear-gradient(to right, black 0%, black calc(100% - 10px), transparent 100%);
+}
+
+/* Σβήνει ΜΟΝΟ προς τα αριστερά (Όταν φτάσουμε τέρμα δεξιά) */
+.mask-left {
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 10px, black 100%);
+    mask-image: linear-gradient(to right, transparent 0%, black 10px, black 100%);
+}
+
+/* Σβήνει ΚΑΙ από τις δύο πλευρές (Όταν είμαστε κάπου στη μέση) */
+.mask-both {
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 10px, black calc(100% - 10px), transparent 100%);
+    mask-image: linear-gradient(to right, transparent 0%, black 10px, black calc(100% - 10px), transparent 100%);
 }
 
 .dashboard-header > :last-child {
@@ -485,18 +528,6 @@ h1 {
   background: var(--primary-color);
   color: white;
   box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
-}
-
-.user-controls {
-  display: flex;
-  gap: 15px;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  background: #e6f7ff;
-  padding: 20px;
-  border-radius: 12px;
-  box-sizing: border-box;
 }
 
 .user-controls span {

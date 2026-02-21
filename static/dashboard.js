@@ -2101,4 +2101,56 @@ document.addEventListener("DOMContentLoaded", function() {
     if (scrollPos) {
         window.scrollTo(0, parseInt(scrollPos));
     }
+    const userControls = document.querySelector('.user-controls');
+    if (userControls) {
+        
+        // Συνάρτηση που αποφασίζει ποιο Fade θα μπει
+        function updateScrollMask() {
+            // Πόσο περιθώριο έχουμε για scroll συνολικά;
+            const maxScroll = userControls.scrollWidth - userControls.clientWidth;
+            
+            // Αν όλα χωράνε και δεν υπάρχει scroll, βγάλε τα εφέ
+            if (maxScroll <= 0) {
+                userControls.classList.remove('mask-left', 'mask-right', 'mask-both');
+                return;
+            }
+
+            // Πού βρισκόμαστε τώρα;
+            const currentScroll = userControls.scrollLeft;
+
+            // Είμαστε τέρμα αριστερά -> Σβήσε μόνο στα δεξιά
+            if (currentScroll <= 2) {
+                userControls.classList.remove('mask-left', 'mask-both');
+                userControls.classList.add('mask-right');
+            } 
+            // Είμαστε τέρμα δεξιά -> Σβήσε μόνο στα αριστερά
+            else if (currentScroll >= maxScroll - 2) {
+                userControls.classList.remove('mask-right', 'mask-both');
+                userControls.classList.add('mask-left');
+            } 
+            // Είμαστε κάπου στη μέση -> Σβήσε και από τα δύο
+            else {
+                userControls.classList.remove('mask-left', 'mask-right');
+                userControls.classList.add('mask-both');
+            }
+        }
+
+        // 1. Τρέξε τον έλεγχο μόλις φορτώσει η σελίδα
+        updateScrollMask();
+
+        // 2. Τρέξε τον έλεγχο κάθε φορά που σκρολάρεις ή αλλάζεις μέγεθος παραθύρου
+        userControls.addEventListener('scroll', updateScrollMask);
+        window.addEventListener('resize', updateScrollMask);
+
+        // 3. Η κίνηση με τη ροδέλα (όπως το είχαμε)
+        userControls.addEventListener('wheel', function(e) {
+            if (userControls.scrollWidth > userControls.clientWidth) {
+                e.preventDefault(); 
+                userControls.scrollBy({
+                    left: e.deltaY > 0 ? 150 : -150, 
+                    behavior: 'smooth'
+                });
+            }
+        }, { passive: false }); 
+    }
 });
