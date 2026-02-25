@@ -378,8 +378,6 @@ h1 {
     
     .user-controls > a:first-child { display: flex; justify-content: center; width: auto !important; background: none !important; padding: 0 !important; min-height: auto !important; border: none !important;}
 
-    .status-info { text-align: center; font-size: 0.75rem; color: #666; padding-top: 5px; }
-
     /* Κουμπιά εκτός Header */
     .controls .control-btn {
         width: auto !important;
@@ -397,10 +395,30 @@ h1 {
     .header-top-bar { display: contents; }
 }
 
+/* ΓΙΑ PC / DESKTOP */
 .status-info {
   font-size: 0.85rem;
   color: var(--text-muted);
+  
+  /* Στοίχιση σε στήλη */
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end; /* Στοίχιση δεξιά για να ταιριάζει με το header */
+  text-align: right;
+  gap: 5px; /* Κενό ανάμεσα στα δύο γκρουπ */
+}
+
+/* Αναγκάζει την τιμή (Enabled/Ώρα) να πέφτει σε νέα γραμμή */
+.status-info span {
+  display: block; 
+  font-weight: bold;
+  margin-top: 2px;
   text-align: center;
+}
+
+/* Εμποδίζει το "Auto-refresh:" να κοπεί στη μέση */
+.status-info div {
+  white-space: nowrap;
 }
 
 /* --- RESPONSIVE CHART GRID (Max 3 columns) --- */
@@ -598,7 +616,20 @@ h1 {
   html { font-size: 16px; } 
   h1 { font-size: 1.6rem; }
   
-  .status-info { text-align: center !important; width: 100%; margin-top: 10px; display: block; }
+  .status-info { 
+    /* Κρατάμε τα μεγέθη/χρώματα που είχες */
+    font-size: 0.75rem; 
+    color: #666; 
+    padding-top: 5px;
+    width: 100%; 
+    margin-top: 10px; 
+    
+    /* ΝΕΟΣ ΚΩΔΙΚΑΣ ΓΙΑ ΤΙΣ 2 ΓΡΑΜΜΕΣ (ΚΙΝΗΤΟ) */
+    display: flex !important; 
+    flex-direction: column !important;
+    align-items: center !important; /* Τα κεντράρει στη μέση της οθόνης */
+    text-align: center !important; 
+  }
 }
 
 /* --- SPECIAL: MINIMALIST MODAL (Icon Only) --- */
