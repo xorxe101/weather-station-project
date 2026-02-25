@@ -101,6 +101,7 @@ class User(UserMixin, db.Model):
     moments = db.relationship('SavedMoment', backref='user', lazy=True)
     temp_unit = db.Column(db.String(5), default='C')   # 'C' ή 'F'
     wind_unit = db.Column(db.String(5), default='kmh') # 'kmh' ή 'ms'
+    profile_icon = db.Column(db.String(50), default='user.png') # Νέο πεδίο για το εικονίδιο προφίλ
 
     # 1. ΔΗΜΙΟΥΡΓΙΑ TOKEN (Που περιέχει και τον κωδικό)
     def get_reset_token(self, expires_sec=1800):
@@ -582,8 +583,27 @@ def profile():
         db.session.commit()
         flash('Password updated successfully', 'success')
         return redirect(url_for('profile'))
-        
-    return render_template('profile.html', current_user=current_user)
+    
+    # --- ΑΛΓΟΡΙΘΜΟΣ ΑΥΤΟΜΑΤΗΣ ΑΝΑΓΝΩΣΗΣ ΕΙΚΟΝΙΔΙΩΝ (GET) ---
+    icon_folder = os.path.join(app.static_folder, 'img_icon', 'profile_img') # Ο φάκελος με τα εικονίδια
+    
+    # Διαβάζει όλα τα αρχεία εικόνων από τον φάκελο
+    avatars = []
+    if os.path.exists(icon_folder):
+        avatars = [f for f in os.listdir(icon_folder) if f.lower().endswith(('.png'))]
+        avatars.sort() # Αλφαβητική ταξινόμηση
+    
+    return render_template('profile.html', current_user=current_user, avatars=avatars)
+
+@app.route('/update_avatar', methods=['POST'])
+@login_required
+def update_avatar():
+    new_icon = request.form.get('profile_icon')
+    if new_icon:
+        current_user.profile_icon = new_icon
+        db.session.commit()
+        flash('Profile picture updated successfully!', 'success')
+    return redirect(url_for('profile'))
 
 @app.route('/api/update_preferences', methods=['POST'])
 @login_required
