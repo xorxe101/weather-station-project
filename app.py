@@ -358,6 +358,24 @@ If you did not request this code, please ignore this email.
     # Στέλνουμε το email ασύγχρονα (όπως και πριν)
     Thread(target=send_async_email, args=(app, msg)).start()
 
+def check_password_strength(password):
+    """
+    Ελέγχει αν ο κωδικός πληροί τα σύγχρονα πρότυπα ασφαλείας.
+    Επιστρέφει (True, "") αν είναι ασφαλής, ή (False, "Μήνυμα Λάθους") αν δεν είναι.
+    """
+    if len(password) < 8:
+        return False, "Password must be at least 8 characters long"
+    if not re.search(r"[A-Z]", password):
+        return False, "Password must contain at least one uppercase letter (A-Z)"
+    if not re.search(r"[a-z]", password):
+        return False, "Password must contain at least one lowercase letter (a-z)"
+    if not re.search(r"\d", password):
+        return False, "Password must contain at least one number (0-9)"
+    if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", password):
+        return False, "Password must contain at least one special character (e.g., !@#$%^&*)"
+    
+    return True, ""
+
 # ==========================================
 # FLASK ROUTES
 # ==========================================
@@ -412,6 +430,12 @@ def reset_token(token):
         if password != confirm_password:
              flash('Passwords do not match', 'danger')
              return render_template('reset_token.html')
+        
+        # --- ΝΕΟ: ΕΛΕΓΧΟΣ ΙΣΧΥΟΣ ΚΩΔΙΚΟΥ ---
+        is_strong, error_msg = check_password_strength(password)
+        if not is_strong:
+            flash(error_msg, 'danger')
+            return redirect(url_for('reset_token', token=token))
 
         hashed_pw = generate_password_hash(password, method='sha256')
         user.password = hashed_pw
@@ -434,15 +458,21 @@ def signup():
 
         if not email or email.strip() == "":
             flash('Email is required for verification', 'danger')
-            return redirect(url_for('signup'))
+            return render_template('signup.html', username=username, email=email)
 
         if User.query.filter_by(username=username).first():
             flash('Username already exists', 'danger')
-            return redirect(url_for('signup'))
+            return render_template('signup.html', username=username, email=email)
 
         if User.query.filter_by(email=email).first():
             flash('Email already exists', 'danger')
-            return redirect(url_for('signup'))
+            return render_template('signup.html', username=username, email=email)
+        
+        # --- ΝΕΟ: ΕΛΕΓΧΟΣ ΙΣΧΥΟΣ ΚΩΔΙΚΟΥ ---
+        is_strong, error_msg = check_password_strength(password)
+        if not is_strong:
+            flash(error_msg, 'danger')
+            return render_template('signup.html', username=username, email=email)
 
         # ΔΗΜΙΟΥΡΓΙΑ OTP
         otp = random.randint(100000, 999999)
@@ -544,7 +574,7 @@ def login():
             # Εξτρά έλεγχος Python γιατί η SQL μερικές φορές μπερδεύει τα κεφαλαία
             if user.username != username:
                 flash('Invalid username or password')
-                return render_template('login.html')
+                return render_template('login.html', username=username)
 
             login_user(user)
             if request.is_json: return jsonify({"success": True})
@@ -552,6 +582,7 @@ def login():
         else:
             if request.is_json: return jsonify({"success": False, "error": "Invalid credentials"}), 401
             flash('Invalid username or password')
+            return render_template('login.html', username=username)
 
     return render_template('login.html')
 
@@ -576,6 +607,12 @@ def profile():
         # 2. ΕΛΕΓΧΟΣ: Αν ο τωρινός κωδικός είναι λάθος
         if not check_password_hash(current_user.password, current_pw):
             flash('Incorrect current password', 'error')
+            return redirect(url_for('profile'))
+        
+        # --- ΝΕΟ: ΕΛΕΓΧΟΣ ΙΣΧΥΟΣ ΚΩΔΙΚΟΥ ---
+        is_strong, error_msg = check_password_strength(new_pw)
+        if not is_strong:
+            flash(error_msg, 'error')
             return redirect(url_for('profile'))
         
         # 3. ΕΠΙΤΥΧΙΑ: Αλλαγή κωδικού

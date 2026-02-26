@@ -42,6 +42,7 @@
                     placeholder="Username" 
                     required 
                     class="modal-input" 
+                    value="{{ username if username else '' }}"
                     style="margin-bottom: 15px;"
                     pattern="[a-zA-Z0-9_.]+"
                     title="Characters allowed: (A-Z, a-z, 0-9, _, .)"
