@@ -1586,7 +1586,6 @@ function setupBackToTop() {
     });
 }
 
-// --- MY MOMENTS COLORING (Auto-Scan) ---
 // --- MY MOMENTS: COLORING & UNIT CONVERSION (Auto-Scan) ---
 function colorAllMoments() {
     // 1. Βρες όλα τα κουτάκια στη σελίδα
@@ -2154,3 +2153,47 @@ document.addEventListener("DOMContentLoaded", function() {
         }, { passive: false }); 
     }
 });
+
+// --- GLOBAL SMART SCROLL PROTECTION (PRO VERSION) ---
+let globalScrollTimer;
+let touchStartY = 0;
+let touchStartX = 0;
+
+// 1. Καταγράφουμε το σημείο που ακούμπησε το δάχτυλο (ΠΡΙΝ γίνει scroll)
+window.addEventListener('touchstart', function(e) {
+    touchStartY = e.touches[0].clientY;
+    touchStartX = e.touches[0].clientX;
+}, { passive: true });
+
+// 2. Παρακολουθούμε την κίνηση του δαχτύλου
+window.addEventListener('touchmove', function(e) {
+    let touchMoveY = e.touches[0].clientY;
+    let touchMoveX = e.touches[0].clientX;
+    
+    // Υπολογίζουμε πόσο κουνήθηκε το δάχτυλο (κάθετα και οριζόντια)
+    let diffY = Math.abs(touchMoveY - touchStartY);
+    let diffX = Math.abs(touchMoveX - touchStartX);
+
+    // Αν κουνήθηκε ΚΑΘΕΤΑ (προς τα κάτω/πάνω) πάνω από 1 pixel...
+    if (diffY > diffX && diffY > 1) {
+        // ...κλειδώνουμε τα γραφήματα ΑΚΑΡΙΑΙΑ!
+        document.body.classList.add('is-scrolling');
+    }
+}, { passive: true });
+
+// 3. Όταν το δάχτυλο σηκωθεί από την οθόνη
+window.addEventListener('touchend', function() {
+    window.clearTimeout(globalScrollTimer);
+    globalScrollTimer = setTimeout(function() {
+        document.body.classList.remove('is-scrolling');
+    }, 150); // Ξεκλειδώνει μετά από λίγο
+}, { passive: true });
+
+// 4. Το κλασικό scroll (για ασφάλεια και για υπολογιστές)
+window.addEventListener('scroll', function() {
+    document.body.classList.add('is-scrolling');
+    window.clearTimeout(globalScrollTimer);
+    globalScrollTimer = setTimeout(function() {
+        document.body.classList.remove('is-scrolling');
+    }, 150);
+}, { passive: true });

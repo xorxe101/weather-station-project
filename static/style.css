@@ -865,7 +865,7 @@ button:focus, a:focus, input:focus, textarea:focus {
 /* Η λαβή της μπάρας */
 ::-webkit-scrollbar-thumb {
     background: #0066cc; 
-    border-radius: 4px;
+    border-radius: 10px;
 }
 
 /* Όταν κάνεις hover στη μπάρα */
@@ -2188,4 +2188,18 @@ button:focus, a:focus, input:focus, textarea:focus {
     margin-bottom: 15px;
     opacity: 0.6;
     transition: transform 0.3s ease;
+}
+
+/* =========================================
+   GLOBAL SMART SCROLL (ΓΙΑ ΟΛΑ ΤΑ ΓΡΑΦΗΜΑΤΑ)
+   ========================================= */
+
+/* Στοχεύουμε απευθείας τον "καμβά" του ApexCharts σε ΟΛΕΣ τις σελίδες */
+.apexcharts-canvas {
+    touch-action: pan-y !important; /* Επιτρέπει το scroll πάνω από το γράφημα */
+}
+
+/* Όταν η σελίδα σκρολάρει, τα γραφήματα γίνονται "αόρατα" στο άγγιγμα */
+body.is-scrolling .apexcharts-canvas {
+    pointer-events: none !important;
 }
