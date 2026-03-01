@@ -73,6 +73,10 @@ h1, h2, h3 { color: #fff !important; }
     background: #777; /* Ένα γκρι που ξεχωρίζει στο μαύρο, αλλά θυμίζει το light mode */
 }
 
+::-webkit-scrollbar-track-piece { /* Εξασφαλίζουμε ότι το υπόλοιπο track είναι ίδιο με το background για ομοιομορφία */
+    background: rgba(0, 0, 0, 0.9);
+}
+
 /* --- APEXCHARTS DARK MODE OVERRIDES --- */
 
 /* Γενικό κείμενο γραφημάτων (Άξονες, Τιμές) */
@@ -280,11 +284,6 @@ body {
 /* 3. INFO: Ολόκληρο Μπλε */
 .toast.info {
     background-color: #007bff !important; /* Έντονο Μπλε */
-}
-
-.password-icon {
-    filter: invert(100%);
-    opacity: 0.9; /* Προαιρετικά: Λίγο πιο απαλό λευκό */
 }
 
 /* ========================================= */
@@ -569,11 +568,6 @@ h3 {
 /* 6. Το Uptime (Χρόνος λειτουργίας) */
 #sys-uptime {
     color: #66b3ff !important; /* Πιο φωτεινό μπλε για το dark mode */
-}
-
-.icon-invert {
-    filter: invert(1);
-    opacity: 0.9; /* Λίγο πιο απαλό για να μην τυφλώνει */
 }
 
 .admin-label-static {

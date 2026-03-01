@@ -1155,7 +1155,7 @@ function showModal(title, contentHTML, actions, extraClass = '') {
     modalBox.className = 'modal-box'; 
     if (extraClass) modalBox.classList.add(extraClass);
 
-    document.getElementById('modal-title').textContent = title;
+    document.getElementById('modal-title').innerHTML = title;
     document.getElementById('modal-content').innerHTML = contentHTML;
     
     const actionContainer = document.getElementById('modal-actions');
@@ -1320,7 +1320,13 @@ function saveCurrentMoment() {
 
 // --- NEW SHARED FUNCTION: DELETE ACCOUNT ---
 function deleteAccount() {
-    showModal("⚠️ Delete Account", 
+    const titleHTML = `
+        <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+            <img src="/static/img_icon/warning.png" class="icon-invert" alt="Warning" style="width: 28px; height: 28px;">
+            <span>Delete Account</span>
+        </div>
+    `;
+    showModal(titleHTML, 
         `<p class="modal-message">Are you sure you want to delete your account? <br><br><b>This cannot be undone</b></p>`, 
         [
             { text: "Cancel", class: "modal-btn-secondary" },
@@ -1408,6 +1414,9 @@ function initMobilePassword(visibleId, hiddenId, btn) {
 
 // --- DARK MODE SYSTEM (Global) ---
 
+let LIGHT_HOUR = 7; // 07:00
+let DARK_HOUR = 19; // 19:00
+
 // 1. Βασική συνάρτηση που φορτώνει το CSS αρχείο
 function enableDarkMode() {
     if (!document.getElementById('dark-theme-style')) {
@@ -1434,7 +1443,7 @@ function autoThemeByTime() {
     const hour = now.getHours(); 
 
     // Μέρα: 07:00 - 19:00
-    const isDayTime = hour >= 7 && hour < 19;
+    const isDayTime = hour >= LIGHT_HOUR && hour < DARK_HOUR;
 
     if (isDayTime) {
         // --- LIGHT MODE ---

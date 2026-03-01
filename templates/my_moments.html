@@ -130,11 +130,23 @@
     </style>
 </head>
 <body>
-    <div class="dashboard-header">
+    <div class="dashboard-header" style="margin-bottom: 0;">
         <h1>Saved Moments for {{ username }}</h1>
         <a href="/" class="control-btn">Back to Dashboard</a>
     </div>
-    
+    <div style="margin: 15px 0; padding: 0 5px;">
+        <div style="position: relative; width: 100%;">
+            <img src="{{ url_for('static', filename='img_icon/search.png') }}" 
+                class="png-icon"
+                alt="Search"
+                style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); width: 20px; height: 20px; opacity: 0.6; pointer-events: none;">
+            <input type="text" id="searchInput" class="modal-input" 
+                placeholder="Search moments (name, date, time, everything...)" 
+                onkeyup="filterMoments()" 
+                style="width: 100%; box-sizing: border-box; font-size: 1.1rem; padding: 12px 15px 12px 45px; margin: 0; border-radius: 12px; background-color: #fff;">
+
+        </div>
+    </div>
     <div class="chart-grid" id="moments-grid">
         {% if moments|length == 0 %}
         <div class="chart-card no-moments" style="grid-column: 1/-1; text-align: center; padding: 40px;">
@@ -331,6 +343,57 @@
             } else {
                 details.classList.add('show');
                 arrow.classList.add('rotate');
+            }
+        }
+
+        // --- SMART SEARCH LOGIC ---
+        function filterMoments() {
+            // 1. Παίρνουμε αυτό που έγραψε ο χρήστης και το κάνουμε μικρά γράμματα
+            const searchInput = document.getElementById('searchInput').value.toLowerCase();
+            
+            // 2. Βρίσκουμε όλες τις κάρτες των moments (εκτός από την κάρτα "No moments saved yet")
+            const cards = document.querySelectorAll('.chart-grid .chart-card:not(.no-moments):not(#no-results-search)');
+            let visibleCards = 0;
+
+            // 3. Ελέγχουμε κάθε κάρτα μία-μία
+            cards.forEach(card => {
+                // Ψάχνουμε τον τίτλο (το h3) και την ημερομηνία (το span) μέσα στην κάρτα
+                const titleText = card.querySelector('h3').innerText.toLowerCase();
+                const dateText = card.querySelector('span').innerText.toLowerCase();
+
+                // Αν το κείμενο που γράψαμε υπάρχει είτε στον τίτλο είτε στην ημερομηνία
+                if (titleText.includes(searchInput) || dateText.includes(searchInput)) {
+                    card.style.display = ""; // Εμφάνισε την
+                    visibleCards++;
+                } else {
+                    card.style.display = "none"; // Κρύψε την
+                }
+            });
+
+            // 4. (Προαιρετικό αλλά τέλειο UX) Αν δεν βρεθεί τίποτα, δείξε ένα μήνυμα
+            let noResults = document.getElementById('no-results-search');
+            if (visibleCards === 0 && cards.length > 0) {
+                if (!noResults) {
+                    noResults = document.createElement('div');
+                    noResults.id = 'no-results-search';
+                    noResults.className = 'chart-card';
+                    noResults.style = "grid-column: 1/-1; text-align: center; padding: 40px;";
+                    /* --- ΑΛΛΑΓΗ: Χρήση εικόνας αντί για emoji --- */
+                    // Φτιάχνουμε μια ωραία δομή με την εικόνα πάνω από το κείμενο
+                    noResults.innerHTML = `
+                        <div style="display: flex; flex-direction: column; align-items: center; gap: 15px;">
+                            <img src="/static/img_icon/sad.png" 
+                                    class="png-icon"
+                                    alt="No results" 
+                                    style="width: 64px; height: 64px;">
+                            <h3 style="margin: 0; color: #666; font-weight: normal;">No moments match your search</h3>
+                        </div>
+                    `;
+                    document.getElementById('moments-grid').appendChild(noResults);
+                }
+                noResults.style.display = "block";
+            } else if (noResults) {
+                noResults.style.display = "none";
             }
         }
 

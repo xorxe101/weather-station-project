@@ -854,11 +854,11 @@ button:focus, a:focus, input:focus, textarea:focus {
 ::-webkit-scrollbar {
     width: 10px;
     height: 10px;
+    background: rgba(0, 0, 0, 0.1); /* Πολύ ελαφρύ γκρι/διάφανο */
 }
 
 /* 2. Το "κανάλι" (το πίσω μέρος) */
 ::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.1); /* Πολύ ελαφρύ γκρι/διάφανο */
     border-radius: 10px;
 }
 
