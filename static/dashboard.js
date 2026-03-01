@@ -2197,3 +2197,16 @@ window.addEventListener('scroll', function() {
         document.body.classList.remove('is-scrolling');
     }, 150);
 }, { passive: true });
+
+// --- PWA REGISTRATION ---
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+            .then(registration => {
+                console.log('PWA: ServiceWorker registered successfully!');
+            })
+            .catch(error => {
+                console.log('PWA: ServiceWorker registration failed:', error);
+            });
+    });
+}

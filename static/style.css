@@ -216,7 +216,7 @@ h1 {
            Έτσι ο τίτλος μένει πάνω και το μενού ανοίγει προς τα κάτω χωρίς να τον σπρώχνει. */
         justify-content: flex-start !important;
         
-        min-height: 60px !important;
+        min-height: 50px !important;
         padding: 10px !important;
         height: auto !important;
         border-radius: 20px !important;

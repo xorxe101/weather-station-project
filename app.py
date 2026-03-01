@@ -1,5 +1,5 @@
 from sqlalchemy import text
-from flask import Flask, jsonify, render_template, request, redirect, url_for, flash, session, Response
+from flask import Flask, jsonify, render_template, request, redirect, url_for, flash, session, Response, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_mail import Mail, Message
@@ -383,6 +383,10 @@ def check_password_strength(password):
 @app.route('/')
 def index():
     return render_template('index.html', current_user=current_user, camera_active=CAMERA_ACTIVE)
+
+@app.route('/sw.js')
+def serve_sw():
+    return send_from_directory('static', 'sw.js')
 
 # --- Authentication Routes ---
 
