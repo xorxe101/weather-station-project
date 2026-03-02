@@ -8,7 +8,7 @@ from itsdangerous import URLSafeTimedSerializer as Serializer
 from dotenv import load_dotenv
 from threading import Thread # <--- ΠΡΟΣΘΕΣΕ ΑΥΤΟ
 from datetime import datetime, timedelta
-import pymysql, re, time, threading, json, os, random, psutil, platform, cv2, socket
+import pymysql, re, time, threading, json, os, random, psutil, platform, socket, requests
 
 # --- FIX: FORCE IPv4 FOR GMAIL (ΛΥΣΗ ΓΙΑ ΤΗΝ ΚΑΘΥΣΤΕΡΗΣΗ) ---
 # Το Raspberry Pi συχνά κολλάει προσπαθώντας να βρει το Gmail μέσω IPv6.
@@ -200,113 +200,13 @@ def get_sensor_data():
     # Fallback αν η βάση είναι άδεια
     return {"latest": {}, "history": []}
 
-# --- ΡΥΘΜΙΣΕΙΣ ΚΑΜΕΡΑΣ (GLOBAL VARIABLES) ---
-outputFrame = None
-lock = threading.Lock()
-camera_thread = None
-CAMERA_ACTIVE = os.environ.get('CAMERA_STATUS').lower() == 'true' # Διαβάζουμε από το .env αν η κάμερα είναι ενεργή ή όχι
-FPS = int(os.environ.get('FPS_SETTINGS', 10)) # Μπορείς να ρυθμίσεις τα FPS από το .env, default είναι 10
-FRAME_DELAY = 1 / FPS
+# --- ΒΑΣΙΚΕΣ ΡΥΘΜΙΣΕΙΣ ΚΑΜΕΡΑΣ ΓΙΑ ΤΟ FRONTEND ---
+CAMERA_ACTIVE = os.environ.get('CAMERA_STATUS', 'False').lower() == 'true'
+CAMERA_WIDTH = int(os.environ.get('WIDTH_CAMERA', 640))
+CAMERA_HEIGHT = int(CAMERA_WIDTH * 0.75)
 
-# Μετρητής συνδεδεμένων χρηστών
-active_clients = 0
-
-# Αυτή η συνάρτηση τρέχει στο παρασκήνιο (Background Thread)
-# Ανοίγει την κάμερα ΜΙΑ φορά και ανανεώνει συνεχώς τη μεταβλητή outputFrame
-def capture_frames():
-    global outputFrame, lock, active_clients
-    
-    camera = None
-    
-    while True:
-        # ΕΛΕΓΧΟΣ: Υπάρχει κανείς που να βλέπει;
-        if active_clients > 0:
-            
-            # Αν χρειάζεται κάμερα αλλά είναι κλειστή, άνοιξέ την
-            if camera is None:
-                print("👀 User connected. Starting Camera...")
-                camera = cv2.VideoCapture(0)
-                # Ρυθμίσεις για να μην ζορίζεται το Pi
-                camera.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-                camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
-                time.sleep(2.0) # Χρόνος για να ζεσταθεί ο αισθητήρας
-
-            success, frame = camera.read()
-            if success:
-                ret, buffer = cv2.imencode('.jpg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), 70])
-                with lock:
-                    outputFrame = buffer.tobytes()
-            else:
-                time.sleep(0.1)
-            
-            # Κανονική ροή, κοιμήσου για λίγο πριν το επόμενο frame
-            time.sleep(FRAME_DELAY)
-
-        else:
-            # Αν ΔΕΝ υπάρχει κανείς (active_clients == 0)
-            if camera is not None:
-                print("💤 No users. Stopping Camera to save power...")
-                camera.release()
-                camera = None # Καθαρίζουμε τη μεταβλητή
-            
-            # Κοιμήσου για 1 δευτερόλεπτο και ξαναέλεγξε
-            time.sleep(1.0)
-
-# Αυτή η συνάρτηση ξεκινά το thread ΜΟΝΟ αν δεν τρέχει ήδη
-def start_camera_thread():
-    global camera_thread, CAMERA_ACTIVE
-    # 1. Πρώτα ελέγχουμε αν επιτρέπεται η κάμερα
-    if not CAMERA_ACTIVE:
-        print("🔕 Camera is disabled in config. Thread NOT started.")
-        return # Σταματάμε εδώ, δεν δημιουργούμε καν το thread
-
-    # 2. Αν επιτρέπεται, τότε το ξεκινάμε
-    if camera_thread is None:
-        camera_thread = threading.Thread(target=capture_frames)
-        camera_thread.daemon = True
-        camera_thread.start()
-        print("📸 Camera Background Thread Started!")
-
-# Καλλούμε την εκκίνηση του thread
-# (Σημείωση: Στο Flask μπορεί να κληθεί 2 φορές στο reload, δεν πειράζει λόγω του ελέγχου if)
-start_camera_thread()
-
-# Αυτή η συνάρτηση στέλνει την εικόνα στον Browser
-def generate():
-    global active_clients, outputFrame, lock
-    
-    # 1. Νέος πελάτης συνδέθηκε -> Αυξάνουμε τον μετρητή
-    with lock:
-        active_clients += 1
-    
-    try:
-        while True:
-            current_frame = None
-            # Μπαίνουμε στο lock ΜΟΝΟ για να διαβάσουμε, και βγαίνουμε αμέσως
-            with lock:
-                if outputFrame is not None:
-                    current_frame = outputFrame
-            
-            # Αν η κάμερα δεν έχει στείλει ακόμα εικόνα (ζεσταίνεται)
-            if current_frame is None:
-                time.sleep(0.1)  # <--- Η ΛΥΣΗ: Ξεκουράζουμε τον επεξεργαστή για 1/10 του δευτερολέπτου
-                continue
-            
-            yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + current_frame + b'\r\n')
-            time.sleep(FRAME_DELAY)
-            
-    except GeneratorExit:
-        # Αυτό συμβαίνει όταν ο πελάτης κλείνει το tab
-        pass
-        
-    finally:
-        # 2. Ο πελάτης έφυγε -> Μειώνουμε τον μετρητή
-        # Το 'finally' τρέχει ΠΑΝΤΑ, είτε βγει κανονικά είτε πέσει η σύνδεση
-        with lock:
-            active_clients -= 1
-            # Ασφάλεια: Να μην πάει αρνητικό
-            if active_clients < 0: active_clients = 0
+# --- GLOBAL ΜΕΤΑΒΛΗΤΗ ΓΙΑ ΤΟ KILL SWITCH ΤΗΣ ΚΑΜΕΡΑΣ ---
+active_proxies = {}
 
 # --- ΝΕΑ ΑΣΥΓΧΡΟΝΗ ΑΠΟΣΤΟΛΗ EMAIL ---
 
@@ -382,7 +282,7 @@ def check_password_strength(password):
 
 @app.route('/')
 def index():
-    return render_template('index.html', current_user=current_user, camera_active=CAMERA_ACTIVE)
+    return render_template('index.html', current_user=current_user, camera_active=CAMERA_ACTIVE, cam_width=CAMERA_WIDTH, cam_height=CAMERA_HEIGHT)
 
 @app.route('/sw.js')
 def serve_sw():
@@ -678,14 +578,45 @@ def delete_account():
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
     
-@app.route('/video_feed') # <-- Για πειραματικό σκοπό, δε θα βάλω login_required εδώ, αλλά μπορείς αν θέλεις
+@app.route('/video_feed')
 def video_feed():
     if not CAMERA_ACTIVE:
-        # Αν η κάμερα είναι κλειστή, στείλε μια κενή απάντηση ή μια εικόνα placeholder
-        # Εδώ στέλνουμε μια απλή εικόνα placeholder (προαιρετικά)
         return "Camera is OFF", 404
+        
+    client_id = request.args.get('client_id')
+    active_proxies[client_id] = True
+        
+    try:
+        req = requests.get('http://127.0.0.1:8081/stream', stream=True, timeout=10)
+        
+        def generate_and_close():
+            try:
+                for chunk in req.iter_content(chunk_size=4096):
+                    # ΕΔΩ ΕΙΝΑΙ Η ΜΑΓΕΙΑ: Αν η JS έστειλε εντολή Stop, σπάμε το loop με το ζόρι!
+                    if client_id and not active_proxies.get(client_id, True):
+                        break
+                        
+                    if chunk:
+                        yield chunk
+            finally:
+                req.close() # Κλείνει η σύνδεση με το ustreamer
+                active_proxies.pop(client_id, None)
 
-    return Response(generate(), mimetype='multipart/x-mixed-replace; boundary=frame')
+        return Response(generate_and_close(), content_type=req.headers.get('Content-Type'))
+    except Exception as e:
+        print(f"Ustreamer Proxy Error: {e}")
+        return "Camera Proxy Error", 500
+
+@app.route('/api/stop_camera', methods=['POST'])
+def stop_camera_api():
+    data = request.get_json()
+    client_id = data.get('client_id') if data else None
+    
+    # Τραβάμε την πρίζα! Λέμε στον proxy να σταματήσει να διαβάζει.
+    if client_id in active_proxies:
+        active_proxies[client_id] = False 
+        
+    return jsonify({"success": True})
 
 # --- Saved Moments Routes ---
 

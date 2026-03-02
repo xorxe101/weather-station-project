@@ -1322,7 +1322,7 @@ function saveCurrentMoment() {
 function deleteAccount() {
     const titleHTML = `
         <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
-            <img src="/static/img_icon/warning.png" class="icon-invert" alt="Warning" style="width: 28px; height: 28px;">
+            <img src="/static/img_icon/warning.png" class="png-icon" alt="Warning" style="width: 28px; height: 28px;">
             <span>Delete Account</span>
         </div>
     `;

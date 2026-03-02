@@ -103,206 +103,263 @@
     <div class="chart-card"><div class="chart-container" id="dewpointChart"></div></div>
   </div>
 
-  {% if current_user.is_authenticated and current_user.username in ['Admin', 'admin'] %}
+  {% if current_user.is_authenticated %}
     <div class="chart-card" style="margin-top: 30px;">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <h3 style="margin: 0; display: flex; align-items: center;">
-                <img src="{{ url_for('static', filename='img_icon/tools.png') }}" 
-                    class="png-icon" alt="System"
-                    style="width: 28px; height: 28px; margin-right: 10px;"> System Health
-            </h3>
-            <span style="font-size: 0.8rem;">Admin View Only</span>
-        </div>
-
-        <div class="health-grid">
-            <div class="health-item">
-                <div class="health-label">CPU Load</div>
-                <div class="health-value" id="sys-cpu">--%</div>
-                <div class="progress-bg"><div class="progress-fill" id="bar-cpu"></div></div>
+        {% if current_user.is_authenticated and current_user.username in ['Admin', 'admin'] %}
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0; display: flex; align-items: center;">
+                    <img src="{{ url_for('static', filename='img_icon/tools.png') }}" 
+                        class="png-icon" alt="System"
+                        style="width: 28px; height: 28px; margin-right: 10px;"> System Health
+                </h3>
+                <span style="font-size: 0.8rem;">Admin View Only</span>
             </div>
-
-            <div class="health-item">
-                <div class="health-label">RAM Usage</div>
-                <div class="health-value" id="sys-ram">--%</div>
-                <div class="progress-bg"><div class="progress-fill" id="bar-ram"></div></div>
-                <small style="font-size: 0.7rem; color: #888;" id="sys-ram-det">-- / -- GB</small>
-            </div>
-
-            <div class="health-item">
-                <div class="health-label">Disk Space</div>
-                <div class="health-value" id="sys-disk">--%</div>
-                <div class="progress-bg"><div class="progress-fill" id="bar-disk"></div></div>
-            </div>
-
-            <div class="health-item">
-                <div class="health-label">CPU Temp</div>
-                <div class="health-value" id="sys-temp">--°C</div>
-                <div class="progress-bg"><div class="progress-fill" id="bar-temp"></div></div>
-            </div>
-
-            <div class="health-item">
-                <div class="health-label">Swap Mem</div>
-                <div class="health-value" id="sys-swap">--%</div>
-                <div class="progress-bg"><div class="progress-fill" id="bar-swap"></div></div>
-            </div>
-
-            <div class="health-item">
-                <div class="health-label">Processes</div>
-                <div class="health-value" id="sys-proc">--</div>
-                <small style="font-size: 0.7rem; color: #888;">Active Tasks</small>
-            </div>
-
-            <div class="health-item">
-                <div class="health-label">Network (MB)</div>
-                <div class="health-value" style="font-size: 1rem;">
-                    <span style="color: #28a745;">⬇️ <span id="net-recv">--</span></span>
+            <div class="health-grid" style="margin-bottom: 15px;">
+                <div class="health-item">
+                    <div class="health-label">CPU Load</div>
+                    <div class="health-value" id="sys-cpu">--%</div>
+                    <div class="progress-bg"><div class="progress-fill" id="bar-cpu"></div></div>
                 </div>
-                <div class="health-value" style="font-size: 1rem;">
-                    <span style="color: #007bff;">⬆️ <span id="net-sent">--</span></span>
+
+                <div class="health-item">
+                    <div class="health-label">RAM Usage</div>
+                    <div class="health-value" id="sys-ram">--%</div>
+                    <div class="progress-bg"><div class="progress-fill" id="bar-ram"></div></div>
+                    <small style="font-size: 0.7rem; color: #888;" id="sys-ram-det">-- / -- GB</small>
+                </div>
+
+                <div class="health-item">
+                    <div class="health-label">Disk Space</div>
+                    <div class="health-value" id="sys-disk">--%</div>
+                    <div class="progress-bg"><div class="progress-fill" id="bar-disk"></div></div>
+                </div>
+
+                <div class="health-item">
+                    <div class="health-label">CPU Temp</div>
+                    <div class="health-value" id="sys-temp">--°C</div>
+                    <div class="progress-bg"><div class="progress-fill" id="bar-temp"></div></div>
+                </div>
+
+                <div class="health-item">
+                    <div class="health-label">Swap Mem</div>
+                    <div class="health-value" id="sys-swap">--%</div>
+                    <div class="progress-bg"><div class="progress-fill" id="bar-swap"></div></div>
+                </div>
+
+                <div class="health-item">
+                    <div class="health-label">Processes</div>
+                    <div class="health-value" id="sys-proc">--</div>
+                    <small style="font-size: 0.7rem; color: #888;">Active Tasks</small>
+                </div>
+
+                <div class="health-item">
+                    <div class="health-label">Network (MB)</div>
+                    <div class="health-value" style="font-size: 1rem;">
+                        <span style="color: #28a745;">⬇️ <span id="net-recv">--</span></span>
+                    </div>
+                    <div class="health-value" style="font-size: 1rem;">
+                        <span style="color: #007bff;">⬆️ <span id="net-sent">--</span></span>
+                    </div>
+                </div>
+
+                <div class="health-item">
+                    <div class="health-label">DB Size</div>
+                    <div class="health-value" id="db-size">-- MB</div>
+                    <div class="progress-bg"><div class="progress-fill" id="bar-db"></div></div>
+                </div>
+                
+                <div class="health-item" style="grid-column: 1 / -1;">
+                    <div class="health-label">System Uptime</div>
+                    <div class="health-value" id="sys-uptime" style="font-size: 1rem; color: #0066cc;">Calculating...</div>
                 </div>
             </div>
-
-            <div class="health-item">
-                <div class="health-label">DB Size</div>
-                <div class="health-value" id="db-size">-- MB</div>
-                 <div class="progress-bg"><div class="progress-fill" id="bar-db"></div></div>
-            </div>
-            
-            <div class="health-item" style="grid-column: 1 / -1;">
-                <div class="health-label">System Uptime</div>
-                <div class="health-value" id="sys-uptime" style="font-size: 1rem; color: #0066cc;">Calculating...</div>
-            </div>
-        </div>
-        <h3 style="margin-bottom: 15px; display: flex; align-items: center; justify-content: center; gap: 10px;">
+        {% endif %}
+        <h3 style="margin-bottom: 15px; margin-top: 0; display: flex; align-items: center; justify-content: center; gap: 10px;">
             {% if camera_active %}
                 <span style="color: #dc3545; font-size: 1.2rem;">●</span> Live Feed
             {% else %}
                 <span style="color: #6c757d; font-size: 1.2rem;">●</span> Camera Offline
             {% endif %}
         </h3>
-        <div style="overflow: hidden; border-radius: 10px;">
+        <div style="overflow: hidden; border-radius: 10px; position: relative;">
             {% if camera_active %}
-                <img id="live-cam" src="{{ url_for('video_feed') }}" 
-                    style="width: 100%; max-width: 640px; display: block; border-radius: 10px; border: 2px solid #333; margin: 0 auto;">
+                
+                <div id="cam-container" 
+                    style="position: relative; background: #000; text-align: center; border: 2px solid #333; border-radius: 10px; min-height: 250px; 
+                    max-width: {{ cam_width }}px; 
+                    max-height: {{ cam_height }}px; 
+                    margin: 0 auto; overflow: hidden;">
+                    
+                    <img id="live-cam" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" style="width: 100%; max-width: {{ cam_width }}px; display: block; opacity: 0.3; object-fit: contain; margin: 0 auto;">
+                    
+                    <img src="{{ url_for('static', filename='img_icon/play.png') }}" id="play-overlay" alt="Play" onclick="startCameraStream()" style="width: 64px; height: 64px; cursor: pointer; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); border-radius: 30px; font-weight: bold; display: flex; align-items: center; gap: 8px; filter: invert(1) grayscale(1) !important;">
+
+                    <div id="loading-spinner" style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; flex-direction: column; align-items: center;">
+                        <div style="width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid white; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                        <span style="margin-top: 10px; font-weight: bold;">Connecting...</span>
+                    </div>
+
+                    <div id="stop-overlay" 
+                        onclick="event.stopPropagation(); stopCameraStream();" 
+                        style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); cursor: pointer; opacity: 0; transition: opacity 0.3s ease; z-index: 10;">
+                        
+                        <img src="{{ url_for('static', filename='img_icon/stop.png') }}" 
+                            alt="Stop" 
+                            style="width: 64px; height: 64px; display: block; filter: invert(1) grayscale(1) !important;">
+                    </div>
+                </div>
+
+                <style>
+                    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+                    
+                    /* Όταν το ποντίκι μπαίνει στο βίντεο, εμφάνισε το Stop απαλά */
+                    #cam-container:hover #stop-overlay {
+                        opacity: 1 !important;
+                    }
+                </style>
+
+                <script>
+                    let currentStreamId = null;
+
+                    function startCameraStream() {
+                        const camImg = document.getElementById('live-cam');
+                        const overlay = document.getElementById('play-overlay');
+                        const container = document.getElementById('cam-container');
+                        const spinner = document.getElementById('loading-spinner');
+                        const stopOverlay = document.getElementById('stop-overlay');
+
+                        if (container.style.cursor === 'default') return;
+
+                        overlay.style.display = 'none';
+                        spinner.style.display = 'flex';
+                        container.style.cursor = 'default';
+                        stopOverlay.style.display = 'none';
+
+                        // 1. Δημιουργούμε ένα μοναδικό ID και το στέλνουμε στο Flask
+                        currentStreamId = Math.random().toString(36).substring(2, 10);
+                        camImg.src = "/video_feed?client_id=" + currentStreamId;
+
+                        camImg.onload = function() {
+                            spinner.style.display = 'none';
+                            camImg.style.opacity = '1';    
+                            stopOverlay.style.display = 'block'; 
+                            camImg.onload = null;           
+                        };
+                    }
+
+                    function stopCameraStream() {
+                        // 1. ΣΤΕΛΝΟΥΜΕ ΤΟ ΣΗΜΑ ΣΤΟ FLASK ΝΑ ΤΡΑΒΗΞΕΙ ΤΗΝ ΠΡΙΖΑ
+                        if (currentStreamId) {
+                            fetch('/api/stop_camera', { 
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ client_id: currentStreamId })
+                            });
+                        }
+
+                        // 2. Κλείνουμε την εικόνα στον Browser
+                        const camImg = document.getElementById('live-cam');
+                        camImg.src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"; 
+                        camImg.style.opacity = '0.3';
+                        
+                        // 3. Επαναφέρουμε το UI
+                        document.getElementById('play-overlay').style.display = 'flex';
+                        document.getElementById('loading-spinner').style.display = 'none';
+                        document.getElementById('stop-overlay').style.display = 'none';
+                        document.getElementById('cam-container').style.cursor = 'pointer';
+                    }
+
+                    // Το 'pagehide' είναι το πιο αξιόπιστο event για κλείσιμο/refresh, ειδικά και στα κινητά
+                    window.addEventListener('pagehide', function() {
+                        if (currentStreamId) {
+                            // Το sendBeacon χρειάζεται τα δεδομένα σε μορφή Blob (πακέτου) για να στείλει σωστά το JSON
+                            const data = JSON.stringify({ client_id: currentStreamId });
+                            const blob = new Blob([data], { type: 'application/json' });
+                            
+                            // Φεύγει σαν σφαίρα στο background του browser, χωρίς να μπλοκάρεται!
+                            navigator.sendBeacon('/api/stop_camera', blob);
+                        }
+                    });
+                </script>
+
             {% else %}
                 <div class="camera-placeholder">
-                    
-                    <img src="{{ url_for('static', filename='img_icon/videocam_off.png') }}" 
-                        alt="Offline" 
-                        class="offline-img icon-invert">
-                    
-                    <h4 style="margin: 0; font-weight: 600;">Stream Unavailable</h4>
-                    <p style="margin-top: 5px; font-size: 0.9rem; max-width: 80%;">
-                        The camera is currently disabled by the administrator
-                    </p>
+                    <img src="{{ url_for('static', filename='img_icon/videocam_off.png') }}" alt="Offline" class="offline-img png-icon">
+                    <h4 style="margin: 0;">Stream Unavailable</h4>
+                    <p style="margin-top: 5px; font-size: 0.9rem;">The camera is currently disabled</p>
                 </div>
             {% endif %}
         </div>
     </div>
-    <script>
-        function updateSystemHealth() {
-            fetch('/api/system_health')
-                .then(response => {
-                    if (response.status === 403) return null; // Not admin
-                    return response.json();
-                })
-                .then(data => {
-                    if (!data) return;
+    {% if current_user.is_authenticated and current_user.username in ['Admin', 'admin'] %}
+        <script>
+            function updateSystemHealth() {
+                fetch('/api/system_health')
+                    .then(response => {
+                        if (response.status === 403) return null; // Not admin
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (!data) return;
 
-                    // CPU
-                    document.getElementById('sys-cpu').innerText = data.cpu + '%';
-                    updateBar('bar-cpu', data.cpu);
+                        // CPU
+                        document.getElementById('sys-cpu').innerText = data.cpu + '%';
+                        updateBar('bar-cpu', data.cpu);
 
-                    // RAM
-                    document.getElementById('sys-ram').innerText = data.ram_percent + '%';
-                    document.getElementById('sys-ram-det').innerText = data.ram_used + ' / ' + data.ram_total + ' GB';
-                    updateBar('bar-ram', data.ram_percent);
+                        // RAM
+                        document.getElementById('sys-ram').innerText = data.ram_percent + '%';
+                        document.getElementById('sys-ram-det').innerText = data.ram_used + ' / ' + data.ram_total + ' GB';
+                        updateBar('bar-ram', data.ram_percent);
 
-                    // Disk
-                    document.getElementById('sys-disk').innerText = data.disk_percent + '%';
-                    updateBar('bar-disk', data.disk_percent);
+                        // Disk
+                        document.getElementById('sys-disk').innerText = data.disk_percent + '%';
+                        updateBar('bar-disk', data.disk_percent);
 
-                    // Temp
-                    document.getElementById('sys-temp').innerText = data.temp + '°C';
-                    // Υποθέτουμε max temp 85 βαθμούς για το Pi
-                    let tempPercent = (data.temp / 85) * 100;
-                    updateBar('bar-temp', tempPercent);
+                        // Temp
+                        document.getElementById('sys-temp').innerText = data.temp + '°C';
+                        // Υποθέτουμε max temp 85 βαθμούς για το Pi
+                        let tempPercent = (data.temp / 85) * 100;
+                        updateBar('bar-temp', tempPercent);
 
-                    // Swap
-                    document.getElementById('sys-swap').innerText = data.swap_percent + '%';
-                    updateBar('bar-swap', data.swap_percent);
+                        // Swap
+                        document.getElementById('sys-swap').innerText = data.swap_percent + '%';
+                        updateBar('bar-swap', data.swap_percent);
 
-                    // Processes
-                    document.getElementById('sys-proc').innerText = data.processes;
+                        // Processes
+                        document.getElementById('sys-proc').innerText = data.processes;
 
-                    // Network
-                    document.getElementById('net-recv').innerText = data.net_recv;
-                    document.getElementById('net-sent').innerText = data.net_sent;
+                        // Network
+                        document.getElementById('net-recv').innerText = data.net_recv;
+                        document.getElementById('net-sent').innerText = data.net_sent;
 
-                    // Database Size
-                    document.getElementById('db-size').innerText = data.db_size + ' MB';
-                    // Μπορείς να αλλάξεις το 500 σε ό,τι όριο θες
-                    let dbPercent = (data.db_size / 500) * 100; 
-                    if (dbPercent > 100) dbPercent = 100;
-                    updateBar('bar-db', dbPercent);
+                        // Database Size
+                        document.getElementById('db-size').innerText = data.db_size + ' MB';
+                        // Μπορείς να αλλάξεις το 500 σε ό,τι όριο θες
+                        let dbPercent = (data.db_size / 500) * 100; 
+                        if (dbPercent > 100) dbPercent = 100;
+                        updateBar('bar-db', dbPercent);
 
-                    // Uptime
-                    document.getElementById('sys-uptime').innerText = data.uptime;
-                })
-                .catch(err => console.error("Health Check Failed", err));
-        }
-
-        function updateBar(id, percent) {
-            const bar = document.getElementById(id);
-            bar.style.width = percent + '%';
-            
-            // Χρώματα ανάλογα το φόρτο
-            bar.className = 'progress-fill'; // Reset
-            if (percent > 85) bar.classList.add('critical');
-            else if (percent > 60) bar.classList.add('high');
-        }
-
-        const cam = document.getElementById('live-cam');
-
-        // Συνάρτηση που ξαναφορτώνει την κάμερα "με το ζόρι"
-        function reloadCamera() {
-            if (cam) {
-                console.log("🔄 Αναγκαστική επανεκκίνηση ροής...");
-                // Προσθέτουμε τυχαίο αριθμό στο τέλος για να ξεγελάσουμε τον browser
-                // ότι είναι "νέα" εικόνα και να ανοίξει νέα σύνδεση
-                let baseUrl = "{{ url_for('video_feed') }}";
-                cam.src = baseUrl + "?t=" + new Date().getTime();
+                        // Uptime
+                        document.getElementById('sys-uptime').innerText = data.uptime;
+                    })
+                    .catch(err => console.error("Health Check Failed", err));
             }
-        }
 
-        // 1. ΑΝΙΧΝΕΥΣΗ ΑΛΛΑΓΗΣ ΔΙΚΤΥΟΥ (Το κλειδί για το πρόβλημά σου)
-        // Αυτό τρέχει μόλις το κινητό βρει ξανά ίντερνετ (π.χ. μετά από αλλαγή WiFi/4G)
-        window.addEventListener('online', function() {
-            console.log("🌐 Το δίκτυο επανήλθε! Επανασύνδεση...");
-            setTimeout(reloadCamera, 500); // Περιμένουμε μισό δευτερόλεπτο να σταθεροποιηθεί
-        });
-
-        // 2. ΑΦΥΠΝΙΣΗ (Όταν ξαναμπαίνεις στο Tab)
-        document.addEventListener("visibilitychange", function() {
-            if (document.visibilityState === 'visible') {
-                console.log("👁️ Το Tab ενεργοποιήθηκε.");
-                reloadCamera();
+            function updateBar(id, percent) {
+                const bar = document.getElementById(id);
+                bar.style.width = percent + '%';
+                
+                // Χρώματα ανάλογα το φόρτο
+                bar.className = 'progress-fill'; // Reset
+                if (percent > 85) bar.classList.add('critical');
+                else if (percent > 60) bar.classList.add('high');
             }
-        });
 
-        // 3. ΠΡΟΣΤΑΣΙΑ ΑΠΟ ΣΦΑΛΜΑΤΑ (Watchdog)
-        // Αν η ροή κοπεί για οποιονδήποτε λόγο, ξαναπροσπάθησε μόνος σου
-        if (cam) {
-            cam.onerror = function() {
-                console.log("❌ Η ροή κόπηκε. Προσπάθεια σε 2 δευτερόλεπτα...");
-                setTimeout(reloadCamera, 2000);
-            };
-        }
-
-        // Τρέξ' το μία φορά τώρα και μετά κάθε 2 δευτερόλεπτα
-        updateSystemHealth();
-        setInterval(updateSystemHealth, 2000);
-    </script>
+            // Τρέξ' το μία φορά τώρα και μετά κάθε 2 δευτερόλεπτα
+            updateSystemHealth();
+            setInterval(updateSystemHealth, 2000);
+        </script>
+    {% endif %}
   {% endif %}
 
   <div class="last-update">
