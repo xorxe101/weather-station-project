@@ -202,8 +202,8 @@ def get_sensor_data():
 
 # --- ΒΑΣΙΚΕΣ ΡΥΘΜΙΣΕΙΣ ΚΑΜΕΡΑΣ ΓΙΑ ΤΟ FRONTEND ---
 CAMERA_ACTIVE = os.environ.get('CAMERA_STATUS', 'False').lower() == 'true'
-CAMERA_WIDTH = int(os.environ.get('WIDTH_CAMERA', 640))
-CAMERA_HEIGHT = int(CAMERA_WIDTH * 0.75)
+CAMERA_WIDTH = int(os.environ.get('WIDTH_CAMERA'))
+CAMERA_HEIGHT = int(os.environ.get('HEIGHT_CAMERA'))
 
 # --- GLOBAL ΜΕΤΑΒΛΗΤΗ ΓΙΑ ΤΟ KILL SWITCH ΤΗΣ ΚΑΜΕΡΑΣ ---
 active_proxies = {}

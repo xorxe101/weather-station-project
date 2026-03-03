@@ -10,12 +10,10 @@ if [ "$CAMERA_STATUS" != "True" ] && [ "$CAMERA_STATUS" != "true" ]; then
     exec sleep infinity
 fi
 
-# 3. Παίρνουμε τις τιμές (αν λείπουν από το .env, βάζουμε default 15 και 640)
-FPS=${FPS_SETTINGS:-15}
-WIDTH=${WIDTH_CAMERA:-640}
-
-# 4. Υπολογίζουμε το Ύψος (Αναλογία 4:3)
-HEIGHT=$((WIDTH * 3 / 4))
+# 3. Παίρνουμε τις τιμές
+FPS=${FPS_SETTINGS}
+WIDTH=${WIDTH_CAMERA}
+HEIGHT=${HEIGHT_CAMERA}
 
 echo "Ξεκινάει το ustreamer με ανάλυση ${WIDTH}x${HEIGHT} στα ${FPS} FPS..."
 
