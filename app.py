@@ -536,6 +536,70 @@ def profile():
     
     return render_template('profile.html', current_user=current_user, avatars=avatars)
 
+@app.route('/api/request_email_change', methods=['POST'])
+@login_required
+def request_email_change():
+    # --- ΠΡΟΣΤΑΣΙΑ ADMIN ---
+    if current_user.username in ['Admin', 'admin']:
+        return jsonify({"success": False, "error": "Administrator email cannot be changed"}), 403
+    
+    data = request.json
+    new_email = data.get('new_email')
+
+    if not new_email:
+        return jsonify({"success": False, "error": "Please enter an email address"}), 400
+
+    if new_email == current_user.email:
+         return jsonify({"success": False, "error": "This is already your email address"}), 400
+
+    # Ελέγχουμε αν το νέο email υπάρχει ήδη σε άλλον χρήστη
+    if User.query.filter_by(email=new_email).first():
+        return jsonify({"success": False, "error": "This email is already registered to another account"}), 400
+
+    # Δημιουργούμε το 6-ψήφιο OTP
+    otp = random.randint(100000, 999999)
+    
+    # Το αποθηκεύουμε προσωρινά στο session
+    session['email_change'] = {
+        'new_email': new_email,
+        'otp': str(otp),
+        'timestamp': time.time()
+    }
+
+    # Στέλνουμε το OTP χρησιμοποιώντας τη συνάρτηση που ήδη έχεις!
+    send_verification_email(new_email, otp)
+
+    return jsonify({"success": True, "message": "OTP sent successfully"})
+
+@app.route('/api/verify_email_change', methods=['POST'])
+@login_required
+def verify_email_change():
+    data = request.json
+    user_otp = data.get('otp')
+
+    if 'email_change' not in session:
+        return jsonify({"success": False, "error": "No pending email change request"}), 400
+
+    session_data = session['email_change']
+
+    # Ελέγχουμε αν το OTP έχει λήξει (π.χ. μετά από 5 λεπτά = 300 δευτερόλεπτα)
+    if time.time() - session_data['timestamp'] > 300:
+        session.pop('email_change', None)
+        return jsonify({"success": False, "error": "OTP has expired. Please try again"}), 400
+
+    # Ελέγχουμε αν το OTP είναι σωστό
+    if user_otp != session_data['otp']:
+        return jsonify({"success": False, "error": "Invalid verification code"}), 400
+
+    # ΑΝ ΕΙΝΑΙ ΟΛΑ ΣΩΣΤΑ: Ενημερώνουμε το email στη Βάση Δεδομένων!
+    current_user.email = session_data['new_email']
+    db.session.commit()
+    
+    # Καθαρίζουμε το session
+    session.pop('email_change', None)
+
+    return jsonify({"success": True, "message": "Email updated successfully!"})
+
 @app.route('/update_avatar', methods=['POST'])
 @login_required
 def update_avatar():

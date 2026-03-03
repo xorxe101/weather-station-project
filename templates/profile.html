@@ -47,6 +47,13 @@
             transform: scale(1.1);
             box-shadow: 0 4px 10px rgba(0, 102, 204, 0.3);
         }
+        .otp-input {
+            text-align: center; 
+            letter-spacing: 12px; 
+            font-size: 1.8rem; 
+            font-weight: bold; 
+            padding: 15px;
+        }
     </style>
 </head>
 <body>
@@ -96,29 +103,22 @@
 
         <hr style="border: 0; border-top: 1px solid #eee; margin: 1rem 0;">
 
-        <h3 style="margin-bottom: 0; display: flex; align-items: center; gap: 10px;">
-            <img src="{{ url_for('static', filename='img_icon/email.png') }}" 
-                alt="Email" 
-                class="png-icon">
-            Email Address
+        <h3 style="margin-bottom: 0; display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <img src="{{ url_for('static', filename='img_icon/email.png') }}" alt="Email" class="png-icon">
+                Email Address
+            </div>
+            
+            {% if current_user.username not in ['Admin', 'admin'] %}
+                <button type="button" class="control-btn" style="padding: 5px 12px; font-size: 0.85rem;" onclick="openEmailModal()">Change</button>
+            {% else %}
+                <span style="font-size: 0.8rem; color: #dc3545; font-weight: normal;">Admin Lock</span>
+            {% endif %}
         </h3>
 
         <div class="input-group" style="margin-top: 15px; margin-bottom: 15px;">
-            <div style="position: relative;">
-                <input type="text" 
-                    value="{{ current_user.email }}" 
-                    class="modal-input" 
-                    readonly 
-                    style="background-color: #f5f5f5; color: #888; cursor: not-allowed; padding-right: 40px; margin-top: 0; margin-bottom: 15px;">
-                
-                <img src="{{ url_for('static', filename='img_icon/lock.png') }}" 
-                    alt="Locked" 
-                    style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); width: 16px; opacity: 0.5;">
-            </div>
-            
-            <small style="color: #999; font-size: 0.8em; margin: 0;">
-                Email cannot be changed for security reasons
-            </small>
+            <input type="text" id="display-user-email" value="{{ current_user.email }}" class="modal-input" readonly 
+                style="background-color: #f5f5f5; color: #555; cursor: default; margin-top: 0; margin-bottom: 5px;">
         </div>
 
         <h3 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 10px;">
@@ -196,7 +196,7 @@
     <div id="avatarModal" class="modal-overlay">
         <div class="modal-box" style="max-width: 400px;">
             <h3 style="margin-top: 0; color: #333;">Choose Avatar</h3>
-            <p style="color: #666; margin-bottom: 20px;">Select your new profile picture.</p>
+            <p style="color: #666; margin-bottom: 20px;">Select your new profile picture</p>
             
             <div class="avatar-grid">
                 {% for avatar in avatars %}
@@ -210,6 +210,62 @@
                 <button type="button" onclick="closeAvatarModal()" class="control-btn" style="flex: 1;">Cancel</button>
                 <button type="button" onclick="submitAvatar()" class="control-btn" style="flex: 1;">Apply</button>
             </div>
+        </div>
+    </div>
+    <div id="emailModal" class="modal-overlay">
+        <div class="modal-box" style="max-width: 400px;">
+            
+            <div id="email-step-1">
+                <h3 style="margin-top: 0; color: #333;">Change Email</h3>
+                <p style="color: #666; font-size: 0.9rem; margin-bottom: 15px;">Enter your new email address. We will send a 6-digit verification code to confirm it</p>
+                
+                <input type="email" id="newEmailInput" class="modal-input" style="margin: 12px 0 12px 0;" placeholder="New Email Address" required>
+                <div id="email-error-1" style="color: #dc3545; font-size: 0.85rem; margin-top: 5px; margin-bottom: 10px; display: none;"></div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 15px;">
+                    <button type="button" onclick="closeEmailModal()" class="control-btn" style="flex: 1;">Cancel</button>
+                    <button type="button" id="btn-send-otp" onclick="requestEmailChange()" class="control-btn" style="flex: 1;">Send Code</button>
+                </div>
+            </div>
+
+            <div id="email-step-2" style="display: none; text-align: center; padding: 10px;">
+                
+                <img src="{{ url_for('static', filename='img_icon/inbox.png') }}" alt="Inbox" class="png-icon" style="width: 64px; height: 64px;">
+                
+                <h2 style="font-size: 1.6rem; margin-bottom: 10px; color: #333;">Check your Inbox</h2>
+                
+                <p style="color: #888; margin-bottom: 20px; font-size: 1rem; line-height: 1.5;">
+                    Please enter the code we sent to your email
+                    <strong id="verify-email-text"></strong>
+                </p>
+                
+                <div style="font-size: 1rem; color: #666; margin-bottom: 25px; font-weight: 500;">
+                    Code expires in: <span id="otp-timer" style="color: #d9534f; font-weight: bold;">05:00</span>
+                </div>
+                
+                <input type="text" id="emailOtpInput" class="modal-input otp-input" placeholder="______" maxlength="6" 
+                       style="text-align: center; font-size: 1.8rem; letter-spacing: 12px; font-weight: bold; padding: 15px; margin-bottom: 10px; width: 100%; box-sizing: border-box;" 
+                       required autocomplete="off" inputmode="numeric" pattern="[0-9]*" 
+                       oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                
+                <div id="email-error-2" style="color: #dc3545; font-size: 0.85rem; margin-bottom: 15px; display: none;"></div>
+                
+                <button type="button" id="btn-verify-otp" onclick="verifyEmailChange()" class="control-btn" 
+                        style="width: 100%; padding: 15px; font-size: 1.1rem; margin-bottom: 20px;">
+                    Verify Email
+                </button>
+                
+                <p style="color: #666; font-size: 0.9em; margin-top: 10px; margin-bottom: 20px;">
+                    Didn't receive it? <br>
+                    <a href="#" onclick="requestEmailChange(); return false;" style="color: #0066cc; font-weight: bold; text-decoration: none;">Resend Email</a>
+                </p>
+
+                <button type="button" onclick="closeEmailModal()" class="control-btn" 
+                        style="width: 100%; margin-top: 5px;">
+                    Cancel
+                </button>
+            </div>
+
         </div>
     </div>
     <script>
@@ -285,7 +341,7 @@
 
         function submitAvatar() {
             if (!tempSelectedAvatar) {
-                alert("Please select an avatar first!");
+                alert("Please select an avatar first");
                 return;
             }
             // Βάζουμε το όνομα της εικόνας στην κρυφή φόρμα
@@ -294,6 +350,161 @@
             // Υποβάλλουμε την κρυφή φόρμα για να σωθεί στη βάση!
             document.getElementById('avatarForm').submit();
         }
+
+        // --- LOGIC ΓΙΑ ΤΗΝ ΑΛΛΑΓΗ EMAIL ΚΑΙ ΤΟ ΧΡΟΝΟΜΕΤΡΟ ---
+        
+        let emailOtpTimerInterval;
+
+        function startEmailOtpTimer(duration) {
+            clearInterval(emailOtpTimerInterval);
+            let timer = duration, minutes, seconds;
+            const display = document.getElementById('otp-timer');
+            const verifyBtn = document.getElementById('btn-verify-otp');
+            
+            verifyBtn.disabled = false;
+            display.style.color = "#dc3545"; // Επαναφορά χρώματος
+            
+            emailOtpTimerInterval = setInterval(function () {
+                minutes = parseInt(timer / 60, 10);
+                seconds = parseInt(timer % 60, 10);
+
+                minutes = minutes < 10 ? "0" + minutes : minutes;
+                seconds = seconds < 10 ? "0" + seconds : seconds;
+
+                display.textContent = minutes + ":" + seconds;
+
+                if (--timer < 0) {
+                    clearInterval(emailOtpTimerInterval);
+                    display.textContent = "Code Expired";
+                    display.style.color = "#6c757d"; // Γκρι χρώμα όταν λήξει
+                    verifyBtn.disabled = true;
+                }
+            }, 1000);
+        }
+
+        function openEmailModal() {
+            document.getElementById('emailModal').classList.add('show');
+            document.body.classList.add('no-scroll');
+            
+            clearInterval(emailOtpTimerInterval);
+            document.getElementById('otp-timer').textContent = "05:00";
+            
+            document.getElementById('email-step-1').style.display = 'block';
+            document.getElementById('email-step-2').style.display = 'none';
+            document.getElementById('newEmailInput').value = '';
+            document.getElementById('emailOtpInput').value = '';
+            document.getElementById('email-error-1').style.display = 'none';
+            document.getElementById('email-error-2').style.display = 'none';
+        }
+
+        function closeEmailModal() {
+            document.getElementById('emailModal').classList.remove('show');
+            document.body.classList.remove('no-scroll');
+            clearInterval(emailOtpTimerInterval);
+        }
+
+        function requestEmailChange() {
+            const newEmail = document.getElementById('newEmailInput').value;
+            const errorDiv = document.getElementById('email-error-1');
+            const btn = document.getElementById('btn-send-otp');
+
+            if (!newEmail || !newEmail.includes('@')) {
+                errorDiv.textContent = "Please enter a valid email address";
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            errorDiv.style.display = 'none';
+            btn.textContent = "Sending";
+            btn.disabled = true;
+
+            fetch('/api/request_email_change', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ new_email: newEmail })
+            })
+            .then(res => res.json())
+            .then(data => {
+                btn.textContent = "Send Code";
+                btn.disabled = false;
+
+                if (data.success) {
+                    document.getElementById('email-step-1').style.display = 'none';
+                    document.getElementById('email-step-2').style.display = 'block';
+                    document.getElementById('verify-email-text').textContent = newEmail;
+                    startEmailOtpTimer(300); // Ξεκινάει το 5λεπτο χρονόμετρο
+                } else {
+                    errorDiv.textContent = data.error;
+                    errorDiv.style.display = 'block';
+                }
+            })
+            .catch(err => {
+                btn.textContent = "Send Code";
+                btn.disabled = false;
+                errorDiv.textContent = "Connection error. Please try again";
+                errorDiv.style.display = 'block';
+            });
+        }
+
+        function verifyEmailChange() {
+            const otp = document.getElementById('emailOtpInput').value;
+            const errorDiv = document.getElementById('email-error-2');
+            const btn = document.getElementById('btn-verify-otp');
+
+            if (otp.length < 5) {
+                errorDiv.textContent = "Please enter the verification code";
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            errorDiv.style.display = 'none';
+            btn.textContent = "Verifying";
+            btn.disabled = true;
+
+            fetch('/api/verify_email_change', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ otp: otp })
+            })
+            .then(res => res.json())
+            .then(data => {
+                btn.textContent = "Verify";
+                btn.disabled = false;
+
+                if (data.success) {
+                    closeEmailModal();
+                    document.getElementById('display-user-email').value = document.getElementById('newEmailInput').value;
+                    alert(data.message); 
+                } else {
+                    errorDiv.textContent = data.error;
+                    errorDiv.style.display = 'block';
+                }
+            })
+            .catch(err => {
+                btn.textContent = "Verify";
+                btn.disabled = false;
+                errorDiv.textContent = "Connection error. Please try again";
+                errorDiv.style.display = 'block';
+            });
+        }
+
+        // --- ΕΝΕΡΓΟΠΟΙΗΣΗ ΤΟΥ ENTER KEY ΣΤΑ INPUTS ΤΟΥ EMAIL MODAL ---
+
+        // Βήμα 1: Enter στο πεδίο του νέου Email
+        document.getElementById('newEmailInput').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // Αποτρέπει οποιαδήποτε άλλη προεπιλεγμένη ενέργεια
+                requestEmailChange();   // Τρέχει τη συνάρτηση του "Send Code"
+            }
+        });
+
+        // Βήμα 2: Enter στο πεδίο του OTP
+        document.getElementById('emailOtpInput').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault(); 
+                verifyEmailChange();    // Τρέχει τη συνάρτηση του "Verify"
+            }
+        });
     </script>
 </body>
 </html>

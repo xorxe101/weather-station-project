@@ -154,11 +154,15 @@
 
                 <div class="health-item">
                     <div class="health-label">Network (MB)</div>
-                    <div class="health-value" style="font-size: 1rem;">
-                        <span style="color: #28a745;">⬇️ <span id="net-recv">--</span></span>
+                    <div class="health-value" style="font-size: 1rem; display: flex; align-items: center; gap: 5px; justify-content: center; margin-bottom: 5px;">
+                        <img src="{{ url_for('static', filename='img_icon/download.png') }}" 
+                            alt="Down" style="width: 24px; height: 24px;"> 
+                        <span style="color: #28a745;"><span id="net-recv">--</span></span>
                     </div>
-                    <div class="health-value" style="font-size: 1rem;">
-                        <span style="color: #007bff;">⬆️ <span id="net-sent">--</span></span>
+                    <div class="health-value" style="font-size: 1rem; display: flex; align-items: center; gap: 5px; justify-content: center;">
+                        <img src="{{ url_for('static', filename='img_icon/upload.png') }}" 
+                            alt="Up" style="width: 24px; height: 24px;"> 
+                        <span style="color: #007bff;"><span id="net-sent">--</span></span>
                     </div>
                 </div>
 

@@ -43,12 +43,12 @@
 
     <div class="chart-card" style="max-width: 450px; margin: 1.5rem auto; text-align: center; padding: 40px 20px;">
         
-        <div style="font-size: 3rem; margin-bottom: 15px;">📩</div>
+        <img src="{{ url_for('static', filename='img_icon/inbox.png') }}" alt="Inbox" class="png-icon" style="width: 64px; height: 64px;">
         
         <h2 style="font-size: 1.6rem; margin-bottom: 10px;">Check your Inbox</h2>
         
         <p style="color: #888; margin-bottom: 20px; font-size: 1rem; line-height: 1.5;">
-            Please enter the code we sent to your email.
+            Please enter the code we sent to your email
         </p>
 
         <div class="timer-container" id="timer-box">
@@ -76,6 +76,8 @@
                        required 
                        class="modal-input otp-input" 
                        autocomplete="off"
+                       inputmode="numeric" 
+                       pattern="[0-9]*"
                        oninput="this.value = this.value.replace(/[^0-9]/g, '')">
             </div>
             
