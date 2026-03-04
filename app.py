@@ -480,7 +480,7 @@ def login():
                 flash('Invalid username or password')
                 return render_template('login.html', username=username)
 
-            login_user(user)
+            login_user(user, remember=True)
             if request.is_json: return jsonify({"success": True})
             return redirect(url_for('index'))
         else:

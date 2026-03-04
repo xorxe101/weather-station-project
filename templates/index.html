@@ -39,40 +39,39 @@
     </div>
     
     <div id="header-content-wrapper">
-        <div class="user-controls">
-            {% if current_user.is_authenticated %}
-                <a href="/profile" style="text-decoration: none; display: flex; align-items: center; gap: 10px;">
-                    <img src="{{ url_for('static', filename='img_icon/profile_img/' + (current_user.profile_icon if current_user.profile_icon else 'user.png')) }}" 
-                        alt="Profile" 
-                        style="width: 35px; height: 35px; border-radius: 50%; border: 2px solid #fff; object-fit: cover; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+        <div class="user-controls-wrapper">
+            
+            <div class="user-controls" id="scrollable-controls" onscroll="updateScrollMask()">
+                
+                {% if current_user.is_authenticated %}
+                    <a href="/profile" style="text-decoration: none; display: flex; align-items: center; gap: 10px;">
+                        <img src="{{ url_for('static', filename='img_icon/profile_img/' + (current_user.profile_icon if current_user.profile_icon else 'user.png')) }}" 
+                            alt="Profile" 
+                            style="width: 35px; height: 35px; border-radius: 50%; border: 2px solid #fff; object-fit: cover; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+                        
+                        <span class="welcome-text" style="white-space: nowrap;">Welcome, <strong>{{ current_user.username }}</strong></span>
+                    </a>
                     
-                    <span class="welcome-text">Welcome, <strong>{{ current_user.username }}</strong></span>
-                </a>
-                
-                <button class="control-btn" onclick="saveCurrentMoment()" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
-                    <img src="{{ url_for('static', filename='img_icon/save.png') }}" 
-                        alt="Save" 
-                        style="width: 20px; height: 20px;">
-                    Save Moment
-                </button>
-                <a href="/my_moments" class="control-btn">My Moments</a>
+                    <button class="control-btn" onclick="saveCurrentMoment()" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <img src="{{ url_for('static', filename='img_icon/save.png') }}" alt="Save" style="width: 20px; height: 20px;">
+                        Save Moment
+                    </button>
+                    <a href="/my_moments" class="control-btn">My Moments</a>
 
-            {% else %}
-                <span class="welcome-text">Welcome <strong>Guest</strong></span>
-                
-                <button class="control-btn" onclick="saveCurrentMoment()" 
-                        title="🔒 Requires Account"
-                        style="display: flex; align-items: center; justify-content: center; gap: 8px; 
-                               opacity: 0.6; cursor: not-allowed; filter: grayscale(100%);">
-                    <img src="{{ url_for('static', filename='img_icon/save.png') }}" 
-                         alt="Save" 
-                         style="width: 20px; height: 20px;">
-                    Save Moment
-                </button>
+                {% else %}
+                    <span class="welcome-text" style="white-space: nowrap;">Welcome <strong>Guest</strong></span>
+                    
+                    <button class="control-btn" onclick="saveCurrentMoment()" title="🔒 Requires Account"
+                            style="display: flex; align-items: center; justify-content: center; gap: 8px; opacity: 0.6; cursor: not-allowed; filter: grayscale(100%);">
+                        <img src="{{ url_for('static', filename='img_icon/save.png') }}" alt="Save" style="width: 20px; height: 20px;">
+                        Save Moment
+                    </button>
 
-                <a href="/login" class="control-btn">Login</a>
-                <a href="/signup" class="control-btn">Sign Up</a>
-            {% endif %}
+                    <a href="/login" class="control-btn">Login</a>
+                    <a href="/signup" class="control-btn">Sign Up</a>
+                {% endif %}
+                
+            </div>
         </div>
 
         <div class="status-info">

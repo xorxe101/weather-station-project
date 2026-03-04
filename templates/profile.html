@@ -103,22 +103,27 @@
 
         <hr style="border: 0; border-top: 1px solid #eee; margin: 1rem 0;">
 
-        <h3 style="margin-bottom: 0; display: flex; align-items: center; justify-content: space-between;">
+        <h3 style="margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between;">
             <div style="display: flex; align-items: center; gap: 10px;">
                 <img src="{{ url_for('static', filename='img_icon/email.png') }}" alt="Email" class="png-icon">
                 Email Address
             </div>
-            
             {% if current_user.username not in ['Admin', 'admin'] %}
-                <button type="button" class="control-btn" style="padding: 5px 12px; font-size: 0.85rem;" onclick="openEmailModal()">Change</button>
-            {% else %}
-                <span style="font-size: 0.8rem; color: #dc3545; font-weight: normal;">Admin Lock</span>
+                <button type="button" class="control-btn" style="padding: 6px 15px; font-size: 0.85rem; margin: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" onclick="openEmailModal()">Change</button>
             {% endif %}
         </h3>
 
-        <div class="input-group" style="margin-top: 15px; margin-bottom: 15px;">
-            <input type="text" id="display-user-email" value="{{ current_user.email }}" class="modal-input" readonly 
-                style="background-color: #f5f5f5; color: #555; cursor: default; margin-top: 0; margin-bottom: 5px;">
+        <div class="modal-input" style="margin-top: 10px; margin-bottom: 25px; width: 100%; position: relative; display: flex; align-items: center; padding: 10px 15px; overflow: hidden; box-sizing: border-box;">
+            <input type="text" id="display-user-email" value="{{ current_user.email }}" readonly 
+                style="flex: 1; background: transparent; border: none; outline: none; color: inherit; font-size: 1rem; cursor: default; padding: 8px 0px; margin: 0; width: 100%;
+                       -webkit-mask-image: linear-gradient(to right, black 80%, transparent 100%);
+                       mask-image: linear-gradient(to right, black 80%, transparent 100%);">
+
+            <div style="flex-shrink: 0; margin-left: 10px; display: flex; align-items: center; z-index: 2;">
+                {% if current_user.username in ['Admin', 'admin'] %}
+                    <img src="{{ url_for('static', filename='img_icon/lock.png') }}" alt="Email" title="Administrator email is locked" style="width: 20px; height: 20px; opacity: 0.6;">
+                {% endif %}
+            </div>
         </div>
 
         <h3 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 10px;">

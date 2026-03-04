@@ -126,33 +126,41 @@ h1 {
 }
 
 /* ΚΕΝΤΡΟ: Μπλε Κουτί Χρήστη (User Controls) */
+
+/* 1. ΕΞΩΤΕΡΙΚΟ ΚΟΥΤΙ: Κρατάει το σταθερό μπλε φόντο, τα borders και το blur */
+.user-controls-wrapper {
+    grid-column: 2;
+    justify-self: center;
+    background-color: rgba(21, 32, 43, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    backdrop-filter: blur(5px);
+    max-width: 100%;
+    min-width: 0; /* Σημαντικό για το Flexbox */
+    display: flex;
+    overflow: hidden; /* Κρατάει τις γωνίες καθαρές */
+}
+
+/* 2. ΕΣΩΤΕΡΙΚΟ ΚΟΥΤΙ: Κάνει το scroll, παίρνει τα Fade Effects, αλλά είναι διάφανο! */
 .user-controls {
-    grid-column: 2; /* Ρητά στη 2η στήλη */
-    justify-self: center; /* Απόλυτο κέντρο */
     display: flex;
     align-items: center;
     gap: 15px;
-    
-    /* Design του Μπλε Κουτιού (Επαναφορά στυλ) */
-    background-color: rgba(21, 32, 43, 0.6); /* Το σκούρο μπλε φόντο */
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
     padding: 8px 20px;
-    backdrop-filter: blur(5px);
-    margin: 0; /* Αφαιρούμε τυχόν αυτόματα margins */
+    margin: 0;
+    
+    /* ΣΗΜΑΝΤΙΚΟ: Αφαιρούμε το χρώμα για να φαίνεται το wrapper από πίσω */
+    background: transparent !important;
+    border: none !important;
+    backdrop-filter: none !important;
 
     /* --- Η ΜΑΓΕΙΑ ΓΙΑ ΤΟ SCROLL --- */
-    max-width: 100%; /* Για να μην ξεχειλίζει την οθόνη στα κινητά */
-    overflow-x: auto; /* Επιτρέπει το σκρολάρισμα οριζόντια */
-    overflow-y: hidden; /* Κρύβει το κάθετο σκρολ */
-    flex-wrap: nowrap; /* Απαγορεύει στα στοιχεία να πέσουν στην από κάτω γραμμή */
-    min-width: 0; /* Σημαντικό για να δουλέψει σωστά το overflow σε flexbox */
-    
-    /* Κρύβουμε την άσχημη μπάρα κύλισης (Scrollbar) για πιο καθαρό look */
-    scrollbar-width: none; /* Για Firefox */
-    -ms-overflow-style: none; /* Για IE/Edge */
-    
-    /* ΕΦΕ 2: Ενεργοποίηση ομαλής κίνησης */
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    flex-wrap: nowrap;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
     scroll-behavior: smooth;
 }
 
@@ -169,20 +177,20 @@ h1 {
 
 /* Σβήνει ΜΟΝΟ προς τα δεξιά (Όταν είμαστε τέρμα αριστερά) */
 .mask-right {
-    -webkit-mask-image: linear-gradient(to right, black 0%, black calc(100% - 10px), transparent 100%);
-    mask-image: linear-gradient(to right, black 0%, black calc(100% - 10px), transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, black 0%, black calc(100% - 15px), transparent 100%);
+    mask-image: linear-gradient(to right, black 0%, black calc(100% - 15px), transparent 100%);
 }
 
 /* Σβήνει ΜΟΝΟ προς τα αριστερά (Όταν φτάσουμε τέρμα δεξιά) */
 .mask-left {
-    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 10px, black 100%);
-    mask-image: linear-gradient(to right, transparent 0%, black 10px, black 100%);
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 15px, black 100%);
+    mask-image: linear-gradient(to right, transparent 0%, black 15px, black 100%);
 }
 
 /* Σβήνει ΚΑΙ από τις δύο πλευρές (Όταν είμαστε κάπου στη μέση) */
 .mask-both {
-    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 10px, black calc(100% - 10px), transparent 100%);
-    mask-image: linear-gradient(to right, transparent 0%, black 10px, black calc(100% - 10px), transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 15px, black calc(100% - 15px), transparent 100%);
+    mask-image: linear-gradient(to right, transparent 0%, black 15px, black calc(100% - 15px), transparent 100%);
 }
 
 .dashboard-header > :last-child {
@@ -300,7 +308,6 @@ h1 {
         margin-right: 0 !important;
     }
 
-
     /* --- ΥΠΟΛΟΙΠΟ MENU & ΚΟΥΜΠΙΑ --- */
     
     #header-content-wrapper {
@@ -313,18 +320,23 @@ h1 {
     #header-content-wrapper.show { display: flex; }
     @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
+    /* --- MOBILE STYLES ΓΙΑ ΤΟ ΝΕΟ ΔΙΠΛΟ ΚΟΥΤΙ --- */
+    .user-controls-wrapper {
+        background-color: rgba(21, 32, 43, 0.05) !important;
+        border: none !important;
+        border-radius: 12px;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
     .user-controls {
         flex-direction: column !important;
         width: 100% !important;
-        background-color: rgba(21, 32, 43, 0.05) !important;
-        border: none !important;
-        
-        /* ΑΛΛΑΓΗ 3: Μείωση padding μέσα στο γκρι κουτί */
-        padding: 8px !important; /* Από 15px 10px */
-        
+        padding: 8px !important;
         box-sizing: border-box !important;
-        border-radius: 12px;
-        display: flex;
+        /* Σβήνουμε τα mask effects στα κινητά γιατί τα κουμπιά πέφτουν το ένα κάτω από το άλλο */
+        -webkit-mask-image: none !important;
+        mask-image: none !important;
     }
 
     /* ΑΛΛΑΓΗ 4: Μείωση κενού κάτω από το Welcome */

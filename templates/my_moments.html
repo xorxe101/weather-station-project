@@ -142,16 +142,17 @@
         <a href="/" class="control-btn">Back to Dashboard</a>
     </div>
     <div style="margin: 15px 0; padding: 0 5px;">
-        <div style="position: relative; width: 100%;">
+        <div class="modal-input" style="position: relative; width: 100%; border-radius: 12px; padding: 0; box-sizing: border-box; display: flex; align-items: center; overflow: hidden; background-color: var(--card-bg, #fff);">
             <img src="{{ url_for('static', filename='img_icon/search.png') }}" 
                 class="png-icon"
                 alt="Search"
-                style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); width: 20px; height: 20px; opacity: 0.6; pointer-events: none;">
-            <input type="text" id="searchInput" class="modal-input" 
+                style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); width: 20px; height: 20px; opacity: 0.6; pointer-events: none; z-index: 2;">
+            <input type="text" id="searchInput" 
                 placeholder="Search moments (name, date, time, everything...)" 
                 onkeyup="filterMoments()" 
-                style="width: 100%; box-sizing: border-box; font-size: 1.1rem; padding: 12px 15px 12px 45px; margin: 0; border-radius: 12px; background-color: #fff;">
-
+                style="width: 100%; box-sizing: border-box; font-size: 1.1rem; padding: 12px 15px 12px 45px; margin: 0; border: none; outline: none; background: transparent; color: inherit;
+                       -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
+                       mask-image: linear-gradient(to right, black 85%, transparent 100%);">
         </div>
     </div>
     <div class="chart-grid" id="moments-grid">
