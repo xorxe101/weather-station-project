@@ -428,8 +428,10 @@ def verify_email():
             db.session.add(new_user)
             db.session.commit()
             session.pop('temp_user', None)
+            # --- ΤΟ ΜΑΓΙΚΟ ΑΥΤΟΜΑΤΟ LOGIN ---
+            login_user(new_user, remember=True)
             flash('Account created successfully! You can now login', 'success')
-            return redirect(url_for('login'))
+            return redirect(url_for('index'))
         else:
             flash('Invalid verification code. Please try again', 'danger')
 

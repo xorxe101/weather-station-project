@@ -167,13 +167,13 @@ h1, h2, h3 { color: #fff !important; }
 .delete-btn-main {
     background-color: #5a1a1a !important; /* Πολύ σκούρο κόκκινο */
     color: #ffcccc !important;            /* Ανοιχτό ροζ γράμματα */
-    border: 1px solid #8a2be2 !important; /* Προσωρινό border, ας βάλουμε κόκκινο */
     border-color: #a71d2a !important;     
 }
 
 .delete-btn-main:hover {
     background-color: #dc3545 !important; /* Γίνεται έντονο κόκκινο στο hover */
     color: #ffffff !important;
+    border-color: #dc3545 !important;
     box-shadow: 0 0 10px rgba(220, 53, 69, 0.5) !important; /* Εφέ λάμψης */
 }
 
@@ -590,4 +590,10 @@ h3 {
     background-color: #1a1a1a; /* Σχεδόν μαύρο */
     border: 2px dashed #444;   /* Σκούρο περίγραμμα */
     color: #bbb;               /* Ανοιχτά γκρι γράμματα */
+}
+
+.user-controls-wrapper {
+    /* Το παλιό σου γνώριμο σκούρο μπλε/γκρι */
+    background-color: rgba(21, 32, 43, 0.6); 
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }

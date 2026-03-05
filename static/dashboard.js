@@ -54,6 +54,16 @@ function saveUnitPref(type, value) {
     if (document.getElementById('latest')) updateDisplay(null, globalHistoryData);
 }
 
+// Απενεργοποιεί το δεξί κλικ σε όλη τη σελίδα
+document.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+});
+
+// Απενεργοποιεί το drag & drop για όλες τις εικόνες
+document.querySelectorAll('img').forEach(img => {
+    img.setAttribute('draggable', false);
+  });
+
 // Μετατροπείς
 function convertTemp(val) {
     if (val === null || val === undefined) return null;
