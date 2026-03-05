@@ -4,4 +4,3 @@ token
 instance/
 .env
 create_admin.py
-static/img_icon/
