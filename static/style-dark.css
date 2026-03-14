@@ -10,6 +10,31 @@
   --text-muted: #a0a0a0;
 }
 
+/* =========================================
+   TRANSLATE MENU - DARK MODE OVERRIDES
+   ========================================= */
+.custom-translate-box {
+    background-color: #1e1e1e;      /* Σκούρο γκρι/μαύρο φόντο */
+    border: 1px solid #444444;      /* Σκούρο περίγραμμα */
+    color: #ffffff;                 /* Λευκά γράμματα */
+    box-shadow: 0 4px 6px rgba(0,0,0,0.5); /* Πιο έντονη σκιά */
+}
+
+.lang-menu {
+    background-color: #1e1e1e;      /* Σκούρο φόντο */
+    border: 1px solid #444444;      /* Σκούρο περίγραμμα */
+    box-shadow: 0 -4px 6px rgba(0,0,0,0.5);
+}
+
+.lang-menu li {
+    border-bottom: 1px solid #444444; /* Σκούρο διαχωριστικό */
+    color: #ffffff;                   /* Λευκά γράμματα */
+}
+
+.lang-menu li:hover { 
+    background-color: #333333;        /* Λίγο πιο ανοιχτό γκρι στο hover */
+}
+
 body {
   background: var(--background-color);
   color: var(--text-color);

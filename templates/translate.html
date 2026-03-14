@@ -1,0 +1,117 @@
+<div class="custom-translate-box notranslate" id="translateBox">
+    <div class="lang-selector-btn" onclick="toggleLangMenu()">
+        <img id="current-lang-flag" src="https://flagcdn.com/w20/gr.png" alt="flag">
+        <span id="current-lang-text">Ελληνικά</span>
+        <span class="arrow">▼</span>
+    </div>
+
+    <ul class="lang-menu" id="langMenu">
+        <li onclick="changeLanguage('el', 'gr.png', 'Ελληνικά')">
+            <img src="https://flagcdn.com/w20/gr.png" alt="Greece"> Ελληνικά
+        </li>
+        <li onclick="changeLanguage('en', 'gb.png', 'English')">
+            <img src="https://flagcdn.com/w20/gb.png" alt="UK"> English
+        </li>
+        <li onclick="changeLanguage('de', 'de.png', 'Deutsch')">
+            <img src="https://flagcdn.com/w20/de.png" alt="Germany"> Deutsch
+        </li>
+        <li onclick="changeLanguage('fr', 'fr.png', 'Français')">
+            <img src="https://flagcdn.com/w20/fr.png" alt="France"> Français
+        </li>
+        <li onclick="changeLanguage('zh-CN', 'cn.png', '中文')">
+            <img src="https://flagcdn.com/w20/cn.png" alt="China"> 中文
+        </li>
+    </ul>
+</div>
+
+<div id="google_translate_element" style="display:none;"></div>
+
+<script type="text/javascript">
+  function googleTranslateElementInit() {
+    new google.translate.TranslateElement({
+      pageLanguage: 'en', // Η αρχική γλώσσα της σελίδας
+      includedLanguages: 'en,el,de,fr,zh-CN',
+      autoDisplay: false
+    }, 'google_translate_element');
+  }
+
+  // Ανοίγει/Κλείνει το μενού μας
+  function toggleLangMenu() {
+      var menu = document.getElementById('langMenu');
+      var arrow = document.querySelector('.arrow'); // Βρίσκει το βελάκι
+      menu.classList.toggle('show');
+      arrow.classList.toggle('open'); // Γυρίζει το βελάκι
+  }
+
+  // Αλλάζει τη γλώσσα και την εικόνα
+  function changeLanguage(langCode, flagImg, langName) {
+      // 1. Αλλάζει την εμφάνιση στο κουμπί μας
+      document.getElementById('current-lang-flag').src = 'https://flagcdn.com/w20/' + flagImg;
+      document.getElementById('current-lang-text').innerText = langName;
+      document.getElementById('langMenu').classList.remove('show'); // Κλείνει το μενού
+      document.querySelector('.arrow').classList.remove('open');
+
+      // --- ΝΕΟ: Αποθήκευση της επιλογής στον browser! ---
+      localStorage.setItem('saved_lang_code', langCode);
+      localStorage.setItem('saved_lang_flag', flagImg);
+      localStorage.setItem('saved_lang_name', langName);
+
+      // 2. Δίνει την εντολή στην Google
+      var googleSelect = document.querySelector('.goog-te-combo');
+      if (googleSelect) {
+          googleSelect.value = langCode;
+          googleSelect.dispatchEvent(new Event('change'));
+      }
+  }
+
+  // Αν ο χρήστης κάνει κλικ έξω από το μενού, να κλείνει αυτόματα
+  document.addEventListener('click', function(event) {
+      var box = document.getElementById('translateBox');
+      if (!box.contains(event.target)) {
+          var menu = document.getElementById('langMenu');
+          var arrow = document.querySelector('.arrow'); // <--- ΔΙΟΡΘΩΘΗΚΕ: Προστέθηκε αυτή η γραμμή
+          if(menu) menu.classList.remove('show');
+          if(arrow) arrow.classList.remove('open'); // Κατεβάζει το βελάκι αν κλικάρεις αλλού
+      }
+  });
+
+  // Όταν φορτώνει η σελίδα (Refresh ή Πρώτη Επίσκεψη)
+  window.addEventListener('DOMContentLoaded', function() {
+      var savedCode = localStorage.getItem('saved_lang_code');
+      var savedFlag = localStorage.getItem('saved_lang_flag');
+      var savedName = localStorage.getItem('saved_lang_name');
+
+      // --- ΤΟ ΚΛΕΙΔΙ: Αν ΔΕΝ υπάρχει αποθήκευση (Πρώτη φορά στη σελίδα) ---
+      if (!savedCode) {
+          savedCode = 'el';       // Θέτουμε τα Ελληνικά ως προεπιλογή
+          savedFlag = 'gr.png';
+          savedName = 'Ελληνικά';
+
+          // Τα αποθηκεύουμε αμέσως για να τα θυμάται
+          localStorage.setItem('saved_lang_code', savedCode);
+          localStorage.setItem('saved_lang_flag', savedFlag);
+          localStorage.setItem('saved_lang_name', savedName);
+      }
+
+      // 1. Ενημερώνουμε τη δική μας "βιτρίνα" 
+      document.getElementById('current-lang-flag').src = 'https://flagcdn.com/w20/' + savedFlag;
+      document.getElementById('current-lang-text').innerText = savedName;
+
+      // 2. "Ξυπνάει" την Google για να μεταφράσει αμέσως στη σωστή γλώσσα!
+      var checkGoogleLoad = setInterval(function() {
+          var googleSelect = document.querySelector('.goog-te-combo');
+          
+          // Μόλις το script της Google εμφανιστεί στη σελίδα...
+          if (googleSelect) {
+              // Της καρφώνουμε τη γλώσσα (π.χ. 'el')
+              googleSelect.value = savedCode;
+              // Πατάμε "εικονικό" enter για να ξεκινήσει η μετάφραση
+              googleSelect.dispatchEvent(new Event('change'));
+              
+              // Σταματάμε το ψάξιμο
+              clearInterval(checkGoogleLoad);
+          }
+      }, 300);
+  });
+</script>
+<script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>

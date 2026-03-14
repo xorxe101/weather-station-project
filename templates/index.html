@@ -450,7 +450,6 @@
       Auto-refresh: <span id="refreshStatus">Enabled</span><br>
       Last update: <span id="lastUpdate">...</span>
   </div>
-  
   <script>
       // --- STICKY HEADER DETECTION ---
       const sentinel = document.getElementById('sentinel');
@@ -474,5 +473,6 @@
       const isUserLoggedIn = {{ 'true' if current_user.is_authenticated else 'false' }};
   </script>
   <script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+  {% include 'translate.html' %}
 </body>
 </html>
