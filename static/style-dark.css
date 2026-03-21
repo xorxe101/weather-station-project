@@ -622,3 +622,28 @@ h3 {
     background-color: rgba(21, 32, 43, 0.6); 
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
+
+/* =========================================
+   GUEST CAMERA PLACEHOLDER (DARK MODE)
+   ========================================= */
+/* Προσοχή: Αν το site σου χρησιμοποιεί άλλη κλάση για το dark mode (π.χ. .dark-theme), 
+   άλλαξε το "body.dark-mode" στο σωστό όνομα! */
+
+.guest-camera-container {
+    background-color: #000;
+    border-color: #444;
+}
+
+.guest-camera-overlay {
+    background-color: rgba(0, 0, 0, 0.65); /* Μαύρο σκοτεινό πέπλο */
+}
+
+.guest-camera-title {
+    color: #f0ad4e;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.9);
+}
+
+.guest-camera-text {
+    color: #dddddd;
+    text-shadow: 1px 1px 4px rgba(0,0,0,0.9);
+}

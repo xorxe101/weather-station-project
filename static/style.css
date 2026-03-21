@@ -2308,3 +2308,67 @@ button:focus, a:focus, input:focus, textarea:focus {
 body.is-scrolling .apexcharts-canvas {
     pointer-events: none !important;
 }
+
+/* =========================================
+   GUEST CAMERA PLACEHOLDER (LIGHT MODE DEFAULT)
+   ========================================= */
+.guest-camera-container {
+    position: relative; 
+    overflow: hidden; 
+    background-color: #f8f9fa; 
+    background-size: cover; 
+    background-position: center; 
+    padding: 40px 20px; 
+    text-align: center; 
+    border: 2px dashed #ccc; /* Ανοιχτόχρωμο περίγραμμα */
+    border-radius: 10px; 
+    min-height: 250px; 
+    display: flex; 
+    flex-direction: column; 
+    justify-content: center; 
+    align-items: center; 
+    z-index: 1;
+}
+
+/* Λευκό/Ανοιχτόχρωμο ημιδιάφανο πέπλο για να διαβάζονται τα γράμματα */
+.guest-camera-overlay {
+    position: absolute; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%; 
+    background-color: rgba(255, 255, 255, 0.7); /* Λευκό με 70% διαφάνεια */
+    backdrop-filter: blur(2px); /* Ελαφρύ θόλωμα της εικόνας από πίσω */
+    z-index: 1;
+}
+
+.guest-camera-content {
+    position: relative; 
+    z-index: 2;
+}
+
+.guest-camera-icon {
+    font-size: 40px; 
+    margin-bottom: 10px; 
+    opacity: 0.9; 
+}
+
+.guest-camera-title {
+    margin: 0; 
+    color: #d97706; /* Σκούρο πορτοκαλί/χρυσό για να κάνει αντίθεση στο λευκό */
+    font-weight: bold;
+}
+
+.guest-camera-text {
+    margin-top: 5px; 
+    font-size: 0.95rem; 
+    color: #333333; /* Σκούρα γράμματα */
+    font-weight: 500;
+}
+
+.guest-login-btn {
+    display: inline-block; 
+    margin-top: 15px; 
+    text-decoration: none; 
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}

@@ -102,7 +102,7 @@
     <div class="chart-card"><div class="chart-container" id="dewpointChart"></div></div>
   </div>
 
-  {% if current_user.is_authenticated %}
+  
     <div class="chart-card" style="margin-top: 30px;">
         {% if current_user.is_authenticated and current_user.username in ['Admin', 'admin'] %}
             <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -185,7 +185,19 @@
             {% endif %}
         </h3>
         <div style="overflow: hidden; border-radius: 10px; position: relative;">
-            {% if camera_active %}
+            {% if not current_user.is_authenticated %}
+                <div class="guest-camera-container" style="background-image: url('{{ url_for('static', filename='weather_bg.jpg') }}');">
+                    <div class="guest-camera-overlay"></div>
+                    <div class="guest-camera-content">
+                        <div class="guest-camera-icon">
+                            <img src="{{ url_for('static', filename='img_icon/lock.png') }}" alt="Camera" style="width: 50px; height: 50px;">
+                        </div>
+                        <h4 class="guest-camera-title">Login Required</h4>
+                        <p class="guest-camera-text">The live camera feed is available exclusively for registered users</p>
+                        <a href="/login" class="control-btn guest-login-btn">Login to View</a>
+                    </div>
+                </div>
+            {% elif camera_active %}
                 
                 <div id="cam-container" 
                     style="position: relative; background: #000; text-align: center; border: 2px solid #333; border-radius: 10px; box-sizing: border-box; transform: translateZ(0);
@@ -444,7 +456,6 @@
             setInterval(updateSystemHealth, 2000);
         </script>
     {% endif %}
-  {% endif %}
 
   <div class="last-update">
       Auto-refresh: <span id="refreshStatus">Enabled</span><br>
