@@ -5,3 +5,4 @@ instance/
 .env
 create_admin.py
 .idea
+weather_brain.pkl

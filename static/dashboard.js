@@ -608,6 +608,38 @@ function updateDisplay(latest, history) {
         const dewPoint = convertTemp(getValue(latest, 'DewPoint'));
         const windSpeed = convertWind(getValue(latest, 'WindSpeed'));
 
+        // --- AI PREDICTION TAB ---
+        const predictionTab = document.getElementById('ai-prediction-tab');
+        if (predictionTab && latest && latest.Predicted_Temp_1h !== undefined && latest.Predicted_Temp_1h !== null) {
+
+            // 1. Βρίσκουμε την ώρα της τελευταίας μέτρησης
+            // (Βάλε latest.timestamp ή latest.Time, ανάλογα πώς λέγεται το πεδίο στο API σου)
+            const lastTime = new Date(latest.timestamp || latest.Time);
+
+            // 2. Προσθέτουμε ακριβώς 60 λεπτά
+            lastTime.setMinutes(lastTime.getMinutes() + 60);
+
+            // 3. Το μορφοποιούμε ωραία σε ΩΩ:ΛΛ (π.χ. 14:30)
+            const expectedTimeStr = lastTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            const predTemp = convertTemp(latest.Predicted_Temp_1h);
+            const colorClass = getColorClass('Air Temp', latest.Predicted_Temp_1h);
+
+            predictionTab.innerHTML = `
+            <div class="weather-box" style="transform: scale(1.2); border: none; box-shadow: none;">
+                <div class="weather-label" style="color: #00D9E9; font-weight: bold;">
+                    Expected at ${expectedTimeStr}
+                </div>
+                <div class="weather-value ${colorClass}" style="font-size: 2.5rem;">
+                    ${predTemp.toFixed(1)}<span class="unit" style="font-size: 1rem;">${tUnit}</span>
+                </div>
+                <div style="font-size: 0.85rem; color: #888; margin-top: 10px;">Powered by Random Forest ML</div>
+            </div>
+        `;
+        } else if (predictionTab) {
+            predictionTab.innerHTML = `<div class="no-data">Awaiting AI Calculation...</div>`;
+        }
+
         document.getElementById('latest').innerHTML = `
             <div class="current-weather">
                 <div class="time-box"><h3>Current Weather: ${nowText}</h3></div>
