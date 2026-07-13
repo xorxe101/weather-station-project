@@ -16,10 +16,10 @@ FEATURES = ['air_temp', 'humidity', 'pressure']         # Οι στήλες πο
 TARGET_COLUMN = 'air_temp'                              # Η στήλη που προσπαθεί να μαντέψει
 
 # 3. Στοιχεία Σύνδεσης MariaDB
-DB_USER = "weather"
-DB_PASS = "station"
-DB_HOST = "localhost"
-DB_NAME = "Accounts"
+DB_USER = os.environ.get('USER_DB')
+DB_PASS = os.environ.get('PASS_DB')
+DB_HOST = os.environ.get('HOST_DB')
+DB_NAME = os.environ.get('NAME_DB')
 TABLE_NAME = "sensor_readings"
 
 # 4. Όνομα Αρχείου Αποθήκευσης
