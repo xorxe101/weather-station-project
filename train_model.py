@@ -1,7 +1,10 @@
 import pandas as pd
 from sqlalchemy import create_engine
 from sklearn.ensemble import RandomForestRegressor
-import joblib
+from dotenv import load_dotenv
+import joblib, os
+
+load_dotenv()
 
 # ==========================================
 # ⚙️ ΒΑΣΙΚΕΣ ΡΥΘΜΙΣΕΙΣ (ΠΙΝΑΚΑΣ ΕΛΕΓΧΟΥ)
