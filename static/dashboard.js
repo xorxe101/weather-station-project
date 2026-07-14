@@ -590,6 +590,64 @@ function getValue(obj, key) {
     return null;
 }
 
+function loadAITrendChart() {
+    fetch('/api/ai_trend')
+        .then(response => response.json())
+        .then(data => {
+            if (data.length === 0) return;
+
+            const labels = data.map(d => d.time);
+            const actualTemps = data.map(d => d.actual);
+            const predictedTemps = data.map(d => d.predicted);
+
+            const ctx = document.getElementById('aiForecastChart').getContext('2d');
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Πραγματική Θερμοκρασία',
+                            data: actualTemps,
+                            borderColor: '#FF5733', // Πορτοκαλί για την πραγματική
+                            borderWidth: 2,
+                            fill: false,
+                            tension: 0.3,
+                            pointRadius: 0
+                        },
+                        {
+                            label: 'Τι προέβλεψε το AI (για 1 ώρα μετά)',
+                            data: predictedTemps,
+                            borderColor: '#00D9E9', // Γαλάζιο για το AI
+                            borderWidth: 2,
+                            borderDash: [5, 5], // Διακεκομμένη γραμμή
+                            fill: false,
+                            tension: 0.3,
+                            pointRadius: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    scales: {
+                        y: {
+                            title: { display: true, text: 'Θερμοκρασία (°C)' }
+                        }
+                    }
+                }
+            });
+        })
+        .catch(err => console.error("Σφάλμα φόρτωσης γραφήματος AI:", err));
+}
+
+// Τρέξε τη συνάρτηση όταν φορτώσει η σελίδα
+document.addEventListener('DOMContentLoaded', loadAITrendChart);
+
 function updateDisplay(latest, history) {
     // Fallback logic
     if ((!latest || !latest.Time) && history && history.length > 0) latest = history[0];

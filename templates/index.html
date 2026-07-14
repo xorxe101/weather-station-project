@@ -3,6 +3,7 @@
 <head>
   <title>Home - Weather Forecast</title>
   <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="icon" href="{{ url_for('static', filename='img_icon/dashboard.ico') }}">
   <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
   <meta name="theme-color" content="#1e3c72">
@@ -100,13 +101,11 @@
     <div class="chart-card"><div class="chart-container" id="winddirectionChart"></div></div>
     <div class="chart-card"><div class="chart-container" id="rainfallrateChart"></div></div>
     <div class="chart-card"><div class="chart-container" id="dewpointChart"></div></div>
-    <!-- AI Forecast Tab -->
-    <div class="chart-card notranslate" translate="no" style="border: 2px solid #00D9E9;">
-      <div class="time-box" style="padding: 15px; border-bottom: 1px dashed #404040; text-align: center;">
-          <h3 style="margin: 0; color: #00D9E9;">🤖 Local AI Forecast</h3>
-      </div>
-      <div id="ai-prediction-tab" style="padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 150px;">
-          <div class="skeleton skeleton-chart"></div> <!-- Φόρτωση -->
+    <div class="chart-card">
+      <h3 style="color: #00D9E9; text-align: center; margin: 10px 0; font-size: 1.1rem;">🤖 AI Prediction</h3>
+      <!-- Το relative position είναι απαραίτητο για να κάνει resize σωστά το Chart.js -->
+      <div class="chart-container" style="position: relative; height: 80%;">
+          <canvas id="aiForecastChart"></canvas>
       </div>
     </div>
   </div>
