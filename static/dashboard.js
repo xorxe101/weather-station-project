@@ -77,39 +77,41 @@ function convertWind(val) {
 
 // ENABLED Chart configuration - Zoom and selection tools are now enabled
 const commonChartConfig = {
-    height: 350,
-    animations: {
-    enabled: true,
-    easing: 'easein',
-    speed: 150,  // CHANGED: from 800 to 150 (faster animation)
-    animateGradually: {
-        enabled: true,
-        delay: 50  // CHANGED: from 150 to 50 (faster initial animation)
-    },
-    dynamicAnimation: {
-        enabled: true,
-        speed: 150  // CHANGED: from 350 to 150 (faster updates)
-    }
-    },
-    toolbar: {
-    show: true,
-    tools: {
-        download: true,   // ENABLED download button
-        selection: true,  // ENABLED selection
-        zoom: true,       // ENABLED zoom button
-        zoomin: true,     // ENABLED zoom in
-        zoomout: true,    // ENABLED zoom out
-        pan: true,        // ENABLED pan button
-        reset: true       // Keep reset functionality
-    }
-    },
-    zoom: {
-    enabled: true,      // ENABLED zoom entirely
-    type: 'x',
-    autoScaleYaxis: true
-    },
-    selection: {
-    enabled: true       // ENABLED selection entirely
+    chart: {
+        height: 350,
+        animations: {
+            enabled: true,
+            easing: 'easein', // Ομαλό ξεκίνημα ΚΑΙ ομαλό φρενάρισμα (αντί για σκέτο easein)
+            speed: 300,          // Ανέβασέ το στα 300ms για να προλαβαίνει να φανεί η κίνηση
+            animateGradually: {
+                enabled: true,
+                delay: 150       // Επαναφορά σε φυσιολογικό delay
+            },
+            dynamicAnimation: {
+                enabled: true,
+                speed: 500       // Πρέπει να ταιριάζει με το από πάνω
+            }
+        },
+        toolbar: {
+            show: true,
+            tools: {
+                download: true,   // ENABLED download button
+                selection: true,  // ENABLED selection
+                zoom: true,       // ENABLED zoom button
+                zoomin: true,     // ENABLED zoom in
+                zoomout: true,    // ENABLED zoom out
+                pan: true,        // ENABLED pan button
+                reset: true       // Keep reset functionality
+            }
+        },
+        zoom: {
+            enabled: true,      // ENABLED zoom entirely
+            type: 'x',
+            autoScaleYaxis: true
+        },
+        selection: {
+            enabled: true       // ENABLED selection entirely
+        }
     }
 };
 
@@ -197,26 +199,28 @@ function renderSkeleton() {
 function getMobileChartConfig() {
     if (window.innerWidth <= 768) {
     return {
-        height: 400,
-        toolbar: {
-        show: true,
-        tools: {
-            download: false,
-            selection: true,
-            zoom: true,
-            zoomin: true,
-            zoomout: true,
-            pan: true,
-            reset: true
-        }
-        },
-        zoom: {
-        enabled: true,
-        type: 'x',
-        autoScaleYaxis: true
-        },
-        selection: {
-        enabled: true
+        chart: {
+            height: 400,
+            toolbar: {
+                show: true,
+                tools: {
+                    download: false,
+                    selection: true,
+                    zoom: true,
+                    zoomin: true,
+                    zoomout: true,
+                    pan: true,
+                    reset: true
+                }
+            },
+            zoom: {
+                enabled: true,
+                type: 'x',
+                autoScaleYaxis: true
+            },
+            selection: {
+                enabled: true
+            }
         }
     };
     }
@@ -1151,10 +1155,7 @@ function createChart(elementId, title, series, colors, config = commonChartConfi
                     ...config.chart,
                     type: 'line',
                     background: 'transparent', // <--- ΣΗΜΑΝΤΙΚΗ ΑΛΛΑΓΗ: Κάνει το φόντο διάφανο
-                    foreColor: textColor,
-                    animations: {
-                        enabled: series[0].data.length > 0
-                    }
+                    foreColor: textColor
                 },
                 grid: {
                     borderColor: gridColor,
