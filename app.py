@@ -1,4 +1,4 @@
-from sqlalchemy import text
+from sqlalchemy import text, create_engine
 from flask import Flask, jsonify, render_template, request, redirect, url_for, flash, session, Response, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
@@ -8,7 +8,15 @@ from itsdangerous import URLSafeTimedSerializer as Serializer
 from dotenv import load_dotenv
 from threading import Thread # <--- ΠΡΟΣΘΕΣΕ ΑΥΤΟ
 from datetime import datetime, timedelta
-import pymysql, re, time, threading, json, os, random, psutil, platform, socket, requests
+import pymysql, re, time, threading, json, os, random, psutil, platform, socket, requests, joblib
+import pandas as pd
+
+# Φόρτωση του μοντέλου στη μνήμη του Apache όταν ξεκινάει
+MODEL_PATH = 'weather_brain.pkl'
+weather_model = None
+
+if os.path.exists(MODEL_PATH):
+    weather_model = joblib.load(MODEL_PATH)
 
 # --- FIX: FORCE IPv4 FOR GMAIL (ΛΥΣΗ ΓΙΑ ΤΗΝ ΚΑΘΥΣΤΕΡΗΣΗ) ---
 # Το Raspberry Pi συχνά κολλάει προσπαθώντας να βρει το Gmail μέσω IPv6.
@@ -760,7 +768,62 @@ def delete_moment(moment_id):
 @app.route('/api/latest')
 def get_latest():
     data = get_sensor_data()
-    return jsonify(data['latest'])
+    latest_data = data.get('latest')
+
+    # --- ML PREDICTION ---
+    if weather_model and latest_data:
+        try:
+            current_temp = float(latest_data.get('air_temp', 0))
+            current_hum = float(latest_data.get('humidity', 0))
+            current_press = float(latest_data.get('pressure', 1013))
+
+            prediction = weather_model.predict([[current_temp, current_hum, current_press]])
+            latest_data['Predicted_Temp_1h'] = round(prediction[0], 1)
+        except Exception as e:
+            print(f"Prediction error: {e}")
+            latest_data['Predicted_Temp_1h'] = None
+
+    return jsonify(latest_data)
+
+@app.route('/api/ai_trend')
+def get_ai_trend():
+    # Βεβαιώσου ότι έχεις τα στοιχεία σύνδεσης εδώ ή είναι ήδη ορισμένα πιο πάνω στο app.py
+    DB_USER = os.environ.get('USER_DB')
+    DB_PASS = os.environ.get('PASS_DB')
+    DB_HOST = os.environ.get('HOST_DB')
+    DB_NAME = os.environ.get('NAME_DB')
+    
+    if not weather_model:
+        return jsonify([])
+
+    try:
+        # Φέρνουμε τις τελευταίες 276 μετρήσεις (π.χ. τελευταίες 23 ώρες)
+        engine = create_engine(f"mysql+pymysql://{DB_USER}:{DB_PASS}@{DB_HOST}/{DB_NAME}")
+        query = "SELECT timestamp, air_temp, humidity, pressure FROM sensor_readings ORDER BY timestamp DESC LIMIT 276"
+        
+        df = pd.read_sql_query(query, engine)
+        if df.empty:
+            return jsonify([])
+            
+        # Ταξινομούμε σωστά από το παρελθόν προς το παρόν
+        df = df.sort_values('timestamp')
+        
+        # Το AI κάνει πρόβλεψη για ΟΛΕΣ τις γραμμές ταυτόχρονα!
+        X = df[['air_temp', 'humidity', 'pressure']]
+        df['predicted_temp'] = weather_model.predict(X)
+        
+        results = []
+        for _, row in df.iterrows():
+            results.append({
+                "time": row['timestamp'].strftime("%H:%M"),
+                "actual": round(row['air_temp'], 1),
+                "predicted": round(row['predicted_temp'], 1)
+            })
+            
+        return jsonify(results)
+    except Exception as e:
+        print(f"Σφάλμα γραφήματος AI: {e}")
+        return jsonify([])
 
 @app.route('/api/history/last/<int:hours>hours')
 def get_history_hours(hours):

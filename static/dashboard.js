@@ -590,6 +590,64 @@ function getValue(obj, key) {
     return null;
 }
 
+function loadAITrendChart() {
+    fetch('/api/ai_trend')
+        .then(response => response.json())
+        .then(data => {
+            if (data.length === 0) return;
+
+            const labels = data.map(d => d.time);
+            const actualTemps = data.map(d => d.actual);
+            const predictedTemps = data.map(d => d.predicted);
+
+            const ctx = document.getElementById('aiForecastChart').getContext('2d');
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Πραγματική Θερμοκρασία',
+                            data: actualTemps,
+                            borderColor: '#FF5733', // Πορτοκαλί για την πραγματική
+                            borderWidth: 2,
+                            fill: false,
+                            tension: 0.3,
+                            pointRadius: 0
+                        },
+                        {
+                            label: 'Τι προέβλεψε το AI (για 1 ώρα μετά)',
+                            data: predictedTemps,
+                            borderColor: '#00D9E9', // Γαλάζιο για το AI
+                            borderWidth: 2,
+                            borderDash: [5, 5], // Διακεκομμένη γραμμή
+                            fill: false,
+                            tension: 0.3,
+                            pointRadius: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    scales: {
+                        y: {
+                            title: { display: true, text: 'Θερμοκρασία (°C)' }
+                        }
+                    }
+                }
+            });
+        })
+        .catch(err => console.error("Σφάλμα φόρτωσης γραφήματος AI:", err));
+}
+
+// Τρέξε τη συνάρτηση όταν φορτώσει η σελίδα
+document.addEventListener('DOMContentLoaded', loadAITrendChart);
+
 function updateDisplay(latest, history) {
     // Fallback logic
     if ((!latest || !latest.Time) && history && history.length > 0) latest = history[0];
@@ -607,6 +665,38 @@ function updateDisplay(latest, history) {
         const groundTemp = convertTemp(getValue(latest, 'Soil Temperature'));
         const dewPoint = convertTemp(getValue(latest, 'DewPoint'));
         const windSpeed = convertWind(getValue(latest, 'WindSpeed'));
+
+        // --- AI PREDICTION TAB ---
+        const predictionTab = document.getElementById('ai-prediction-tab');
+        if (predictionTab && latest && latest.Predicted_Temp_1h !== undefined && latest.Predicted_Temp_1h !== null) {
+
+            // 1. Βρίσκουμε την ώρα της τελευταίας μέτρησης
+            // (Βάλε latest.timestamp ή latest.Time, ανάλογα πώς λέγεται το πεδίο στο API σου)
+            const lastTime = new Date(latest.timestamp || latest.Time);
+
+            // 2. Προσθέτουμε ακριβώς 60 λεπτά
+            lastTime.setMinutes(lastTime.getMinutes() + 60);
+
+            // 3. Το μορφοποιούμε ωραία σε ΩΩ:ΛΛ (π.χ. 14:30)
+            const expectedTimeStr = lastTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            const predTemp = convertTemp(latest.Predicted_Temp_1h);
+            const colorClass = getColorClass('Air Temp', latest.Predicted_Temp_1h);
+
+            predictionTab.innerHTML = `
+            <div class="weather-box" style="transform: scale(1.2); border: none; box-shadow: none;">
+                <div class="weather-label" style="color: #00D9E9; font-weight: bold;">
+                    Expected at ${expectedTimeStr}
+                </div>
+                <div class="weather-value ${colorClass}" style="font-size: 2.5rem;">
+                    ${predTemp.toFixed(1)}<span class="unit" style="font-size: 1rem;">${tUnit}</span>
+                </div>
+                <div style="font-size: 0.85rem; color: #888; margin-top: 10px;">Powered by Random Forest ML</div>
+            </div>
+        `;
+        } else if (predictionTab) {
+            predictionTab.innerHTML = `<div class="no-data">Awaiting AI Calculation...</div>`;
+        }
 
         document.getElementById('latest').innerHTML = `
             <div class="current-weather">
